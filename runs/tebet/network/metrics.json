@@ -1,0 +1,15 @@
+{
+  "place": "Tebet, Jakarta Selatan",
+  "mode": "walk",
+  "area_km2": 7.07,
+  "street_length_km": 409.8,
+  "street_density_km_per_km2": 58.0,
+  "intersections": 3764,
+  "intersection_density_per_km2": 532.6,
+  "avg_node_degree": 2.74,
+  "dead_end_share_pct": 11.9,
+  "circuity": 1.093,
+  "meshedness": 0.186,
+  "gamma": 0.458,
+  "caveat": "Computed from OpenStreetMap; unmapped streets and alleys lower density and raise circuity."
+}

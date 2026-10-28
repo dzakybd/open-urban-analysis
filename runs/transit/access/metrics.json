@@ -1,0 +1,49 @@
+{
+  "place": "Jagakarsa, Jakarta Selatan",
+  "mode": "walk",
+  "speed_kmh": 4.8,
+  "limit_min": 10.0,
+  "area_km2": 12.57,
+  "cells": 1264,
+  "cells_on_network": 1264,
+  "off_network_pct": 0.0,
+  "categories": {
+    "rail": {
+      "in_area": 0,
+      "in_buffer": 3,
+      "reachable_nodes": 3,
+      "within_5_min_pct": 0.0,
+      "within_10_min_pct": 0.0,
+      "beyond_limit_pct": 100.0,
+      "median_min": 51.4,
+      "p90_min": 72.0,
+      "unreachable_pct": 0.0
+    },
+    "transjakarta": {
+      "in_area": 121,
+      "in_buffer": 265,
+      "reachable_nodes": 242,
+      "within_5_min_pct": 58.0,
+      "within_10_min_pct": 93.0,
+      "beyond_limit_pct": 7.0,
+      "median_min": 4.5,
+      "p90_min": 9.1,
+      "unreachable_pct": 0.0
+    },
+    "bus_stop": {
+      "in_area": 126,
+      "in_buffer": 296,
+      "reachable_nodes": 274,
+      "within_5_min_pct": 58.5,
+      "within_10_min_pct": 93.0,
+      "beyond_limit_pct": 7.0,
+      "median_min": 4.4,
+      "p90_min": 9.1,
+      "unreachable_pct": 0.0
+    }
+  },
+  "all_categories_within_limit_pct": 0.0,
+  "no_category_within_limit_pct": 7.0,
+  "beyond_limit_for_at_least_one_pct": 100.0,
+  "caveat": "OSM may lack POIs that exist; a gap here means 'not mapped within reach', not 'no facility'."
+}

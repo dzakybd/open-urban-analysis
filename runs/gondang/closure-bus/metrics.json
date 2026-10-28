@@ -1,0 +1,158 @@
+{
+  "place": "Gondang, Tulungagung",
+  "mode": "drive",
+  "closure": {
+    "edges_removed": 16,
+    "length_m": 1438,
+    "names": [],
+    "osmids": [
+      159127117,
+      549291141,
+      664568777,
+      664568778,
+      775961710,
+      804589242
+    ],
+    "highway": [
+      "tertiary",
+      "trunk"
+    ]
+  },
+  "pairs": {
+    "pairs": 62250,
+    "affected_over_1_min_pct": 14.7,
+    "cut_off_pct": 1.6,
+    "extra_min_median_of_affected": 8.6,
+    "extra_min_p90_of_affected": 16.0,
+    "extra_min_max": 37.2,
+    "note": "random street nodes in the area; free-flow minutes"
+  },
+  "routes": [
+    {
+      "from": "Terminal Gayatri Tulungagung",
+      "to": "Durenan Trenggalek",
+      "before": {
+        "km": 15.89,
+        "minutes": 23.8,
+        "streets": [
+          "Jalan Yos Sudarso",
+          "Jalan Pattimura",
+          "Jalan Soekarno-Hatta"
+        ]
+      },
+      "after": {
+        "km": 14.77,
+        "minutes": 31.9,
+        "streets": [
+          "Jalan Yos Sudarso",
+          "Jalan Pattimura",
+          "Jalan Soekarno-Hatta"
+        ]
+      },
+      "landmarks_min_distance_m": {
+        "Mojoarum": {
+          "before": 11,
+          "after": 3627
+        },
+        "Bendungan": {
+          "before": 124,
+          "after": 3360
+        },
+        "Kalangbret": {
+          "before": 606,
+          "after": 2784
+        },
+        "Tamanan": {
+          "before": 848,
+          "after": 848
+        },
+        "Campurdarat": {
+          "before": 6813,
+          "after": 5807
+        },
+        "Pakel": {
+          "before": 4236,
+          "after": 4236
+        }
+      },
+      "extra_km": -1.12,
+      "extra_min": 8.1,
+      "detour_only_streets": []
+    },
+    {
+      "from": "Tulungagung",
+      "to": "Trenggalek",
+      "before": {
+        "km": 32.63,
+        "minutes": 47.3,
+        "streets": [
+          "Jalan Jenderal Achmad Yani Barat",
+          "Jalan Dokter Sutomo",
+          "Jalan Pattimura",
+          "Jalan Soekarno-Hatta",
+          "Jalan Pahlawan",
+          "Jalan P. Sudirman",
+          "Jalan Panglima Besar Sudirman"
+        ]
+      },
+      "after": {
+        "km": 31.5,
+        "minutes": 55.4,
+        "streets": [
+          "Jalan Jenderal Achmad Yani Barat",
+          "Jalan Dokter Sutomo",
+          "Jalan Pattimura",
+          "Jalan Soekarno-Hatta",
+          "Jalan Pahlawan",
+          "Jalan P. Sudirman",
+          "Jalan Panglima Besar Sudirman"
+        ]
+      },
+      "landmarks_min_distance_m": {
+        "Mojoarum": {
+          "before": 11,
+          "after": 3627
+        },
+        "Bendungan": {
+          "before": 124,
+          "after": 3360
+        },
+        "Kalangbret": {
+          "before": 606,
+          "after": 2784
+        },
+        "Tamanan": {
+          "before": 579,
+          "after": 579
+        },
+        "Campurdarat": {
+          "before": 6813,
+          "after": 5807
+        },
+        "Pakel": {
+          "before": 4236,
+          "after": 4236
+        }
+      },
+      "extra_km": -1.13,
+      "extra_min": 8.1,
+      "detour_only_streets": []
+    }
+  ],
+  "access": {
+    "poi": "hospital",
+    "mapped_pois_in_area_and_buffer": 7,
+    "threshold_min": 30.0,
+    "cells": 735,
+    "median_min_before": 9.6,
+    "median_min_after": 9.6,
+    "cells_slower_over_1_min_pct": 7.9,
+    "within_threshold_before_pct": 100.0,
+    "within_threshold_after_pct": 98.9,
+    "lost_access_pct": 1.1,
+    "cut_off_pct": 0.0,
+    "max_extra_min": 20.8,
+    "pois_mapped_note": "access is to POIs that OSM has; an unmapped hospital is invisible here"
+  },
+  "caveat": "Free-flow travel times from OSM road classes, no traffic. Missing back roads in OSM make detours look longer."
+}

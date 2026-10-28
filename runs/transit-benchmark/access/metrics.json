@@ -1,0 +1,49 @@
+{
+  "place": "Dukuh Atas, Jakarta Pusat",
+  "mode": "walk",
+  "speed_kmh": 4.8,
+  "limit_min": 10.0,
+  "area_km2": 12.57,
+  "cells": 1264,
+  "cells_on_network": 1264,
+  "off_network_pct": 0.0,
+  "categories": {
+    "rail": {
+      "in_area": 10,
+      "in_buffer": 22,
+      "reachable_nodes": 22,
+      "within_5_min_pct": 8.1,
+      "within_10_min_pct": 34.8,
+      "beyond_limit_pct": 65.2,
+      "median_min": 12.4,
+      "p90_min": 22.0,
+      "unreachable_pct": 0.0
+    },
+    "transjakarta": {
+      "in_area": 185,
+      "in_buffer": 497,
+      "reachable_nodes": 470,
+      "within_5_min_pct": 70.5,
+      "within_10_min_pct": 95.1,
+      "beyond_limit_pct": 4.9,
+      "median_min": 3.6,
+      "p90_min": 7.9,
+      "unreachable_pct": 0.0
+    },
+    "bus_stop": {
+      "in_area": 197,
+      "in_buffer": 580,
+      "reachable_nodes": 584,
+      "within_5_min_pct": 73.0,
+      "within_10_min_pct": 95.6,
+      "beyond_limit_pct": 4.4,
+      "median_min": 3.4,
+      "p90_min": 7.7,
+      "unreachable_pct": 0.0
+    }
+  },
+  "all_categories_within_limit_pct": 34.7,
+  "no_category_within_limit_pct": 4.4,
+  "beyond_limit_for_at_least_one_pct": 65.3,
+  "caveat": "OSM may lack POIs that exist; a gap here means 'not mapped within reach', not 'no facility'."
+}

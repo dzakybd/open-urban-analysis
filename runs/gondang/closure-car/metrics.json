@@ -1,0 +1,175 @@
+{
+  "place": "Gondang, Tulungagung",
+  "mode": "drive",
+  "closure": {
+    "edges_removed": 34,
+    "length_m": 3242,
+    "names": [
+      "Jalan Sidomulyo"
+    ],
+    "osmids": [
+      159127117,
+      549291141,
+      664568777,
+      664568778,
+      679967458,
+      689862505,
+      775961710,
+      799596360,
+      799596361,
+      804589242,
+      1371658147,
+      1371658148,
+      1371658149,
+      1371658150,
+      1416751131
+    ],
+    "highway": [
+      "living_street",
+      "residential",
+      "tertiary",
+      "trunk"
+    ]
+  },
+  "pairs": {
+    "pairs": 62250,
+    "affected_over_1_min_pct": 20.5,
+    "cut_off_pct": 0.0,
+    "extra_min_median_of_affected": 3.6,
+    "extra_min_p90_of_affected": 4.0,
+    "extra_min_max": 8.2,
+    "note": "random street nodes in the area; free-flow minutes"
+  },
+  "routes": [
+    {
+      "from": "Terminal Gayatri Tulungagung",
+      "to": "Durenan Trenggalek",
+      "before": {
+        "km": 15.62,
+        "minutes": 22.5,
+        "streets": [
+          "Jalan Yos Sudarso Gang 2",
+          "Jalan Yos Sudarso",
+          "Jalan Pattimura",
+          "Jalan Soekarno-Hatta",
+          "Jalan Sidomulyo"
+        ]
+      },
+      "after": {
+        "km": 15.81,
+        "minutes": 26.2,
+        "streets": [
+          "Jalan Yos Sudarso Gang 2",
+          "Jalan Yos Sudarso",
+          "Jalan Pattimura",
+          "Jalan Soekarno-Hatta"
+        ]
+      },
+      "landmarks_min_distance_m": {
+        "Mojoarum": {
+          "before": 369,
+          "after": 538
+        },
+        "Bendungan": {
+          "before": 169,
+          "after": 171
+        },
+        "Kalangbret": {
+          "before": 606,
+          "after": 627
+        },
+        "Tamanan": {
+          "before": 787,
+          "after": 787
+        },
+        "Campurdarat": {
+          "before": 6813,
+          "after": 6813
+        },
+        "Pakel": {
+          "before": 4236,
+          "after": 4236
+        }
+      },
+      "extra_km": 0.19,
+      "extra_min": 3.7,
+      "detour_only_streets": []
+    },
+    {
+      "from": "Tulungagung",
+      "to": "Trenggalek",
+      "before": {
+        "km": 31.94,
+        "minutes": 44.6,
+        "streets": [
+          "Jalan Jenderal Achmad Yani Barat",
+          "Jalan Dokter Sutomo",
+          "Jalan Pattimura",
+          "Jalan Soekarno-Hatta",
+          "Jalan Sidomulyo",
+          "Jalan Pahlawan",
+          "Jalan P. Sudirman",
+          "Jalan Panglima Besar Sudirman"
+        ]
+      },
+      "after": {
+        "km": 32.13,
+        "minutes": 48.2,
+        "streets": [
+          "Jalan Jenderal Achmad Yani Barat",
+          "Jalan Dokter Sutomo",
+          "Jalan Pattimura",
+          "Jalan Soekarno-Hatta",
+          "Jalan Pahlawan",
+          "Jalan P. Sudirman",
+          "Jalan Panglima Besar Sudirman"
+        ]
+      },
+      "landmarks_min_distance_m": {
+        "Mojoarum": {
+          "before": 369,
+          "after": 538
+        },
+        "Bendungan": {
+          "before": 169,
+          "after": 171
+        },
+        "Kalangbret": {
+          "before": 606,
+          "after": 627
+        },
+        "Tamanan": {
+          "before": 579,
+          "after": 579
+        },
+        "Campurdarat": {
+          "before": 6813,
+          "after": 6813
+        },
+        "Pakel": {
+          "before": 4236,
+          "after": 4236
+        }
+      },
+      "extra_km": 0.19,
+      "extra_min": 3.6,
+      "detour_only_streets": []
+    }
+  ],
+  "access": {
+    "poi": "hospital",
+    "mapped_pois_in_area_and_buffer": 7,
+    "threshold_min": 30.0,
+    "cells": 1937,
+    "median_min_before": 13.2,
+    "median_min_after": 13.6,
+    "cells_slower_over_1_min_pct": 22.0,
+    "within_threshold_before_pct": 97.8,
+    "within_threshold_after_pct": 97.0,
+    "lost_access_pct": 0.8,
+    "cut_off_pct": 0.0,
+    "max_extra_min": 3.8,
+    "pois_mapped_note": "access is to POIs that OSM has; an unmapped hospital is invisible here"
+  },
+  "caveat": "Free-flow travel times from OSM road classes, no traffic. Missing back roads in OSM make detours look longer."
+}

@@ -1,0 +1,79 @@
+{
+  "place": "Tebet, Jakarta Selatan",
+  "mode": "walk",
+  "speed_kmh": 4.8,
+  "limit_min": 15.0,
+  "area_km2": 7.07,
+  "cells": 716,
+  "cells_on_network": 716,
+  "off_network_pct": 0.0,
+  "categories": {
+    "hospital": {
+      "in_area": 7,
+      "in_buffer": 23,
+      "reachable_nodes": 50,
+      "within_5_min_pct": 11.9,
+      "within_10_min_pct": 39.5,
+      "within_15_min_pct": 68.9,
+      "beyond_limit_pct": 31.1,
+      "median_min": 11.6,
+      "p90_min": 20.5,
+      "unreachable_pct": 0.0,
+      "beyond_limit_population": 37069,
+      "beyond_limit_population_pct": 29.5
+    },
+    "school": {
+      "in_area": 79,
+      "in_buffer": 255,
+      "reachable_nodes": 402,
+      "within_5_min_pct": 81.7,
+      "within_10_min_pct": 97.9,
+      "within_15_min_pct": 100.0,
+      "beyond_limit_pct": 0.0,
+      "median_min": 2.9,
+      "p90_min": 6.4,
+      "unreachable_pct": 0.0,
+      "beyond_limit_population": 0,
+      "beyond_limit_population_pct": 0.0
+    },
+    "park": {
+      "in_area": 23,
+      "in_buffer": 87,
+      "reachable_nodes": 142,
+      "within_5_min_pct": 35.8,
+      "within_10_min_pct": 77.4,
+      "within_15_min_pct": 96.6,
+      "beyond_limit_pct": 3.4,
+      "median_min": 6.5,
+      "p90_min": 12.5,
+      "unreachable_pct": 0.0,
+      "beyond_limit_population": 4865,
+      "beyond_limit_population_pct": 3.9
+    },
+    "market": {
+      "in_area": 5,
+      "in_buffer": 31,
+      "reachable_nodes": 55,
+      "within_5_min_pct": 19.1,
+      "within_10_min_pct": 56.8,
+      "within_15_min_pct": 93.2,
+      "beyond_limit_pct": 6.8,
+      "median_min": 9.2,
+      "p90_min": 14.2,
+      "unreachable_pct": 0.0,
+      "beyond_limit_population": 8644,
+      "beyond_limit_population_pct": 6.9
+    }
+  },
+  "population": {
+    "source": "GHSL GHS-POP R2023A, 2020, 100 m (modelled, not a census)",
+    "total_on_network": 125859,
+    "total_in_area": 125859
+  },
+  "all_categories_within_limit_pct": 61.6,
+  "no_category_within_limit_pct": 0.0,
+  "beyond_limit_for_at_least_one_pct": 38.4,
+  "beyond_limit_for_at_least_one_population": 46671,
+  "beyond_limit_for_at_least_one_population_pct": 37.1,
+  "caveat": "OSM may lack POIs that exist; a gap here means 'not mapped within reach', not 'no facility'."
+}

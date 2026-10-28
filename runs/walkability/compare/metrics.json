@@ -1,0 +1,117 @@
+{
+  "places": [
+    {
+      "place": "Menteng, Jakarta",
+      "slug": "menteng-jakarta",
+      "area_km2": 7.07,
+      "street_length_km": 348.3,
+      "street_density_km_per_km2": 49.3,
+      "intersections": 2828,
+      "intersection_density_per_km2": 400.1,
+      "avg_node_degree": 2.77,
+      "dead_end_share_pct": 10.8,
+      "circuity": 1.083,
+      "meshedness": 0.193,
+      "gamma": 0.462,
+      "pedestrian_ways_km_per_km2": 9.5,
+      "mapped_crossings_per_km2": 26.4,
+      "mapped_sidewalk_share_of_street_length_pct": 4.9,
+      "mean_essentials_within_10_min": 4.35,
+      "essentials_listed": [
+        "school",
+        "market",
+        "park",
+        "clinic",
+        "transit"
+      ],
+      "cells_with_all_5_within_10_min_pct": 49.6,
+      "cells_with_none_within_10_min_pct": 1.0,
+      "access": {
+        "school": {
+          "within_5_min_pct": 58.5,
+          "within_10_min_pct": 94.3,
+          "mapped_in_area": 45
+        },
+        "market": {
+          "within_5_min_pct": 17.5,
+          "within_10_min_pct": 59.5,
+          "mapped_in_area": 11
+        },
+        "park": {
+          "within_5_min_pct": 47.9,
+          "within_10_min_pct": 89.4,
+          "mapped_in_area": 29
+        },
+        "clinic": {
+          "within_5_min_pct": 45.1,
+          "within_10_min_pct": 94.4,
+          "mapped_in_area": 30
+        },
+        "transit": {
+          "within_5_min_pct": 79.6,
+          "within_10_min_pct": 97.3,
+          "mapped_in_area": 116
+        }
+      }
+    },
+    {
+      "place": "BSD City, Tangerang Selatan",
+      "slug": "bsd-city-tangerang-selatan",
+      "area_km2": 7.07,
+      "street_length_km": 294.1,
+      "street_density_km_per_km2": 41.6,
+      "intersections": 2254,
+      "intersection_density_per_km2": 318.9,
+      "avg_node_degree": 2.5,
+      "dead_end_share_pct": 11.1,
+      "circuity": 1.136,
+      "meshedness": 0.126,
+      "gamma": 0.417,
+      "pedestrian_ways_km_per_km2": 7.7,
+      "mapped_crossings_per_km2": 7.6,
+      "mapped_sidewalk_share_of_street_length_pct": 2.7,
+      "mean_essentials_within_10_min": 1.66,
+      "essentials_listed": [
+        "school",
+        "market",
+        "park",
+        "clinic",
+        "transit"
+      ],
+      "cells_with_all_5_within_10_min_pct": 2.8,
+      "cells_with_none_within_10_min_pct": 14.5,
+      "access": {
+        "school": {
+          "within_5_min_pct": 17.2,
+          "within_10_min_pct": 31.7,
+          "mapped_in_area": 14
+        },
+        "market": {
+          "within_5_min_pct": 3.8,
+          "within_10_min_pct": 12.6,
+          "mapped_in_area": 1
+        },
+        "park": {
+          "within_5_min_pct": 38.3,
+          "within_10_min_pct": 64.7,
+          "mapped_in_area": 23
+        },
+        "clinic": {
+          "within_5_min_pct": 2.4,
+          "within_10_min_pct": 8.2,
+          "mapped_in_area": 1
+        },
+        "transit": {
+          "within_5_min_pct": 28.5,
+          "within_10_min_pct": 48.3,
+          "mapped_in_area": 35
+        }
+      }
+    }
+  ],
+  "caveat": "OSM has no sidewalk quality, width, shade, lighting, traffic speed or safety; mapped sidewalks and crossings are only as complete as local mappers made them. No single score is computed on purpose.",
+  "area_km2": [
+    7.07,
+    7.07
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "place": "Tebet, Jakarta Selatan",
+  "area_km2": 7.07,
+  "limit_min": 15,
+  "straight_line_radius_m": 1200,
+  "categories": {
+    "hospital": {
+      "in_area": 8,
+      "in_buffer": 24,
+      "per_km2": 1.13,
+      "median_min": 9.7,
+      "p90_min": 17.7,
+      "network_within_pct": 80.4,
+      "straight_line_within_pct": 100.0
+    },
+    "clinic": {
+      "in_area": 43,
+      "in_buffer": 133,
+      "per_km2": 6.08,
+      "median_min": 4.8,
+      "p90_min": 8.3,
+      "network_within_pct": 99.4,
+      "straight_line_within_pct": 100.0
+    },
+    "school": {
+      "in_area": 79,
+      "in_buffer": 255,
+      "per_km2": 11.18,
+      "median_min": 3.1,
+      "p90_min": 6.5,
+      "network_within_pct": 99.7,
+      "straight_line_within_pct": 100.0
+    },
+    "park": {
+      "in_area": 23,
+      "in_buffer": 87,
+      "per_km2": 3.25,
+      "median_min": 7.3,
+      "p90_min": 13.2,
+      "network_within_pct": 97.2,
+      "straight_line_within_pct": 100.0
+    },
+    "market": {
+      "in_area": 5,
+      "in_buffer": 31,
+      "per_km2": 0.71,
+      "median_min": 9.2,
+      "p90_min": 15.0,
+      "network_within_pct": 89.7,
+      "straight_line_within_pct": 100.0
+    },
+    "bus_stop": {
+      "in_area": 69,
+      "in_buffer": 306,
+      "per_km2": 9.76,
+      "median_min": 4.7,
+      "p90_min": 10.3,
+      "network_within_pct": 98.9,
+      "straight_line_within_pct": 100.0
+    },
+    "rail": {
+      "in_area": 4,
+      "in_buffer": 13,
+      "per_km2": 0.57,
+      "median_min": 15.5,
+      "p90_min": 23.7,
+      "network_within_pct": 48.2,
+      "straight_line_within_pct": 90.9
+    }
+  },
+  "caveat": "OSM may lack POIs that exist; zero mapped is not zero real."
+}
