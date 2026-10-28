@@ -44,7 +44,7 @@ The area is a disc around the point; geocoding a district returns its centroid. 
 | Which of two places is more walkable? | `walkability.py` | side-by-side metrics, no single score |
 | What if this road or bridge closes? | `closure.py` | pairs slower or cut off, named-route detour with street names, cells losing access to a POI |
 
-POI categories: `hospital`, `clinic`, `school`, `park`, `market`, `bus_stop`, `rail`. Add a category in `scripts/common.py` (`CATEGORIES`, an OSM tag filter) when a question needs another.
+POI categories: `hospital`, `clinic`, `school`, `park`, `market`, `bus_stop`, `rail`, `transjakarta` (stops whose name, network, operator or brand mentions TransJakarta — in practice mostly Mikrotrans feeder vans, not BRT corridors). Add a category in `scripts/common.py` (`CATEGORIES`, an OSM tag filter; `CATEGORY_MATCH` narrows it by a regex over the name) when a question needs another.
 
 ## 3. Street network: `network_stats.py`
 
@@ -82,11 +82,11 @@ Street density, intersection density, dead-end share, circuity, meshedness, pede
 ## 7. Road or bridge closure: `closure.py`
 
 ```bash
-uv run SKILL_DIR/scripts/closure.py WORK/aoi.json --mode drive --close-near=-8.0630,111.8870,60 --bridge-only \
+uv run SKILL_DIR/scripts/closure.py WORK/aoi.json --mode drive --close-near=-8.0717,111.84665,150 \
   --od "Tulungagung|-8.0654,111.9030|Trenggalek|-8.0505,111.7090" --poi hospital --out WORK/closure
 ```
 
-Find the bridge's coordinates first (the news names it; look it up in Nominatim, then check the closed edge in `closed.geojson` and on `map.html`: a wrong match closes the wrong road). It removes the edges, then reports the share of random trips that got slower, the median, 90th-percentile and maximum extra minutes, how many are cut off, each named route before and after with the streets the detour uses, and the cells that lose access to the nearest POI of a category. **Compare the detour streets with the diversion the authorities announced.** If they disagree, say so: either OSM lacks a road they use, or the announced route avoids roads the model thinks are fine (width, weight limits, traffic).
+Find the bridge's coordinates first (the news names it; look it up in Nominatim, then check the closed edge in `closed.geojson` and on `map.html`: a wrong match closes the wrong road). OSM often draws a bridge as a separate `man_made=bridge` polygon and leaves the road under it untagged, so `--bridge-only` can find nothing or the wrong span; close everything within a radius of the point instead (`--only-highway` narrows it to a road class). Check that routes actually change: in the Gondang run `--bridge-only` within 80 m removed four minor streets and changed nothing, and closing only the trunk road within 30 m was bypassed through alley bridges beside it; 150 m on every road cut the crossing. Use `--classes trunk,primary,secondary,tertiary` to simulate a bus or truck that cannot use small streets. It removes the edges, then reports the share of random trips that got slower, the median, 90th-percentile and maximum extra minutes, how many are cut off, each named route before and after with the streets the detour uses, and the cells that lose access to the nearest POI of a category. **Compare the detour streets with the diversion the authorities announced.** If they disagree, say so: either OSM lacks a road they use, or the announced route avoids roads the model thinks are fine (width, weight limits, traffic).
 
 ## Answering
 

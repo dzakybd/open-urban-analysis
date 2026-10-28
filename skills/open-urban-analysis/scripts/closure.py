@@ -4,7 +4,7 @@
 # ///
 """Road or bridge closure simulation: remove street edges from the network and measure what changes.
 
-    uv run closure.py work/aoi.json --mode drive --close-near=-8.0630,111.8870,60 --bridge-only \
+    uv run closure.py work/aoi.json --mode drive --close-near=-8.0717,111.84665,30 --only-highway trunk \
         --od "Tulungagung|-8.0654,111.9030|Trenggalek|-8.0505,111.7090" --poi hospital --out work/closure
 
 --close-near=LAT,LNG,M removes every edge within M metres of the point (--bridge-only keeps it to edges tagged as
@@ -32,6 +32,10 @@ import networkx as nx
 import numpy as np
 import osmnx as ox
 from shapely.geometry import LineString, Point
+
+
+def as_list(v):
+    return v if isinstance(v, list) else [v]
 
 
 def parse_od(text):
@@ -67,7 +71,20 @@ def main():
     ap.add_argument("--close-near", help="LAT,LNG,METRES (write with = when the latitude is negative)")
     ap.add_argument("--close-osmid", help="comma-separated OSM way ids")
     ap.add_argument("--bridge-only", action="store_true", help="with --close-near, remove only edges tagged bridge")
+    ap.add_argument(
+        "--only-highway", help="with --close-near, remove only these OSM highway classes (for example trunk,primary)"
+    )
     ap.add_argument("--od", action="append", default=[], help='"NameA|lat,lng|NameB|lat,lng" (repeatable)')
+    ap.add_argument(
+        "--classes",
+        help="keep only these OSM highway classes before simulating (heavy vehicles: trunk,primary,secondary,tertiary)",
+    )
+    ap.add_argument(
+        "--landmark",
+        action="append",
+        default=[],
+        help='"Name|lat,lng" (repeatable): how close each named route passes, before and after, to places the authorities named',
+    )
     ap.add_argument("--poi", help="a POI category whose access is measured before and after")
     ap.add_argument("--threshold-min", type=float, default=30)
     ap.add_argument("--pairs", type=int, default=250, help="random origin nodes for the pairwise detour sample")
@@ -81,6 +98,11 @@ def main():
     aoi = c.load_aoi(args.aoi)
     G = c.fetch_graph(aoi, args.mode, args.buffer_m)
     crs = G.graph["crs"]
+    if args.classes:
+        keep = set(args.classes.split(","))
+        drop = [(u, v, k) for u, v, k, d in G.edges(keys=True, data=True) if not keep & set(as_list(d["highway"]))]
+        G.remove_edges_from(drop)
+        G = ox.truncate.largest_component(G, strongly=True)
     nodes, edges = ox.graph_to_gdfs(G)
 
     # which edges close
@@ -88,17 +110,21 @@ def main():
     if args.close_near:
         lat, lng, rad = (float(v) for v in args.close_near.split(","))
         disc = gpd.GeoSeries([Point(lng, lat)], crs=4326).to_crs(crs).iloc[0].buffer(rad)
-        near = edges.intersects(disc).to_numpy()
+        near = np.array(edges.intersects(disc))
         if args.bridge_only:
-            near &= (
-                edges["bridge"].map(lambda v: str(v) not in ("nan", "None", "no")).to_numpy()
-                if "bridge" in edges
-                else False
+            is_bridge = (
+                edges["bridge"].map(lambda v: str(v) not in ("nan", "None", "no")) if "bridge" in edges else False
             )
-        hit |= near
+            near = near & np.array(is_bridge)
+        if args.only_highway:
+            wanted = set(args.only_highway.split(","))
+            near = near & np.array(
+                edges["highway"].map(lambda h: bool(wanted & set(h if isinstance(h, list) else [h])))
+            )
+        hit = hit | near
     if args.close_osmid:
         ids = {int(v) for v in args.close_osmid.split(",")}
-        hit |= edges["osmid"].map(lambda v: bool(ids & set(v if isinstance(v, list) else [v]))).to_numpy()
+        hit = hit | np.array(edges["osmid"].map(lambda v: bool(ids & set(v if isinstance(v, list) else [v]))))
     if not hit.any():
         raise SystemExit("no edge matched the closure; widen --close-near or drop --bridge-only")
     removed = edges[hit]
@@ -159,6 +185,16 @@ def main():
             "before": {k: v for k, v in (before or {}).items() if k != "geometry"},
             "after": {k: v for k, v in (after or {}).items() if k != "geometry"} if after else "no route",
         }
+        if args.landmark:
+            row["landmarks_min_distance_m"] = {}
+            for lm in args.landmark:
+                name, ll = lm.split("|")
+                la, ln = (float(v) for v in ll.split(","))
+                p = gpd.GeoSeries([Point(ln, la)], crs=4326).to_crs(crs).iloc[0]
+                row["landmarks_min_distance_m"][name] = {
+                    "before": round(before["geometry"].distance(p)) if before else None,
+                    "after": round(after["geometry"].distance(p)) if after else None,
+                }
         if before and after:
             row["extra_km"] = round(after["km"] - before["km"], 2)
             row["extra_min"] = round(after["minutes"] - before["minutes"], 1)
@@ -263,15 +299,16 @@ def make_figure(aoi, G, removed, routes, cells, metrics, args, title):
                 label=f"{r['od']}, {r['kind']}: {r['km']} km, {r['minutes']} min")  # fmt: skip
     for g in removed.geometry:
         ax.plot(*g.xy, color="black", lw=5, zorder=6, solid_capstyle="round")
-        ax.annotate(
-            "closed",
-            (g.centroid.x, g.centroid.y),
-            xytext=(10, 10),
-            textcoords="offset points",
-            fontsize=10,
-            fontweight="bold",
-            zorder=7,
-        )
+    centre = removed.geometry.union_all().centroid
+    ax.annotate(
+        "closed",
+        (centre.x, centre.y),
+        xytext=(12, 12),
+        textcoords="offset points",
+        fontsize=11,
+        fontweight="bold",
+        zorder=7,
+    )
     c.frame(
         ax,
         G,

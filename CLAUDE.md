@@ -4,7 +4,7 @@ Address or coordinates + question -> OpenStreetMap street graph and POIs (OSMnx)
 
 ## Stack
 - Python >= 3.12, uv. Skill scripts are standalone (PEP 723, `uv run`), sharing `scripts/common.py`.
-- Data: OpenStreetMap via OSMnx (Overpass API, cached in `~/.cache/open-urban-analysis`, override with `OUA_CACHE`), Nominatim for geocoding, optional GHSL GHS-POP R2023A 100 m population tiles (JRC, one ~20 MB tile per 1,000 km).
+- Data: OpenStreetMap via OSMnx — set `OUA_PBF` to a dated Geofabrik `.osm.pbf` for the offline backend (clipped with `osmium`, cached in `~/.cache/open-urban-analysis`), otherwise the live Overpass API (cached in `~/.cache/open-urban-analysis`, override with `OUA_CACHE`), Nominatim for geocoding, optional GHSL GHS-POP R2023A 100 m population tiles (JRC, one ~20 MB tile per 1,000 km).
 - Deep Agents (`deepagents`) on `_ChatOpenAICodex` from `langchain-openai==1.7.2` (ChatGPT sign-in, no API key).
 
 ## Commands

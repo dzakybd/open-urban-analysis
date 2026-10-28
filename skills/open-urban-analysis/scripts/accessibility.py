@@ -158,7 +158,9 @@ def make_map(aoi, res, iso, pois, cells, args, path):
 
 def make_figure(aoi, res, metrics, args, path):
     G, cats, lim = res["G"], list(res["cats"]), args.minutes
-    n = len(cats) + 2
+    # With a single category the "all categories" panel repeats the category panel, so it is left out.
+    combined = len(cats) > 1
+    n = len(cats) + 1 + combined
     ncol = 3 if n > 4 else 2
     nrow = -(-n // ncol)
     fig, axes = plt.subplots(nrow, ncol, figsize=(5.2 * ncol, 5.4 * nrow + 0.8), dpi=160)
@@ -181,37 +183,63 @@ def make_figure(aoi, res, metrics, args, path):
             G,
             aoi,
             cat.replace("_", " ").title(),
-            f"{mm[f'within_{int(lim)}_min_pct']}% of the area within {lim:.0f} min · {mm['in_area']} POIs in OSM",
+            f"{mm[f'within_{int(lim)}_min_pct']}% within {lim:.0f} min · "
+            f"{mm['in_area']} mapped in area, {mm['in_buffer']} in buffer",
         )
     # all categories reached
-    ax = axes[len(cats)]
-    c.draw_streets(ax, G)
-    on = res["grid"]["on_network"]
-    allmin = np.max([res["cats"][k]["minutes"] for k in cats], axis=0)
-    ok = (allmin <= lim) & on
-    bad = (allmin > lim) & on
-    ax.scatter(res["grid"]["x"][ok], res["grid"]["y"][ok], s=7, c="#1a9850", marker="s", lw=0, zorder=3)
-    ax.scatter(res["grid"]["x"][bad], res["grid"]["y"][bad], s=7, c="#d73027", marker="s", lw=0, zorder=3)
-    c.frame(ax, G, aoi, f"All {len(cats)} within {lim:.0f} min",
-            f"{metrics['all_categories_within_limit_pct']}% of the area; {metrics['beyond_limit_for_at_least_one_pct']}% misses at least one")  # fmt: skip
+    if combined:
+        ax = axes[len(cats)]
+        c.draw_streets(ax, G)
+        on = res["grid"]["on_network"]
+        allmin = np.max([res["cats"][k]["minutes"] for k in cats], axis=0)
+        ok = (allmin <= lim) & on
+        bad = (allmin > lim) & on
+        ax.scatter(res["grid"]["x"][ok], res["grid"]["y"][ok], s=7, c="#1a9850", marker="s", lw=0, zorder=3)
+        ax.scatter(res["grid"]["x"][bad], res["grid"]["y"][bad], s=7, c="#d73027", marker="s", lw=0, zorder=3)
+        c.frame(ax, G, aoi, f"All {len(cats)} within {lim:.0f} min",
+                f"{metrics['all_categories_within_limit_pct']}% of the area; {metrics['beyond_limit_for_at_least_one_pct']}% misses at least one")  # fmt: skip
     # bars
-    ax = axes[len(cats) + 1]
-    vals = [metrics["categories"][k][f"within_{int(lim)}_min_pct"] for k in cats]
-    ax.barh(range(len(cats)), vals, color=[c.COLORS[k] for k in cats])
-    ax.set_yticks(range(len(cats)), [k.replace("_", " ") for k in cats])
-    ax.invert_yaxis()
-    ax.set_xlim(0, 100)
-    ax.set_xlabel(f"% of area within {lim:.0f} min ({args.mode})")
-    for i, v in enumerate(vals):
-        ax.text(v + 1, i, f"{v:.0f}%", va="center", fontsize=10)
-    for s in ("top", "right"):
-        ax.spines[s].set_visible(False)
-    ax.set_title("Coverage", loc="left", fontsize=13, fontweight="bold")
+    if len(cats) == 1:
+        # A single bar leaves most of the panel empty; the same numbers read better as a small table.
+        ax = axes[1]
+        ax.axis("off")
+        mm = metrics["categories"][cats[0]]
+        rows = [
+            ("within 5 min", f"{mm['within_5_min_pct']:.0f}%"),
+            (f"within {lim:.0f} min", f"{mm[f'within_{int(lim)}_min_pct']:.0f}%"),
+            (f"beyond {lim:.0f} min", f"{mm['beyond_limit_pct']:.0f}%"),
+            ("median walk", f"{mm['median_min']:.1f} min"),
+            ("90th percentile", f"{mm['p90_min']:.1f} min"),
+        ]
+        if "beyond_limit_population" in mm:
+            rows += [
+                ("people beyond reach", f"{mm['beyond_limit_population']:,.0f}"),
+                ("of the population", f"{mm['beyond_limit_population_pct']:.0f}%"),
+            ]
+        ax.set_title("Coverage", loc="left", fontsize=13, fontweight="bold")
+        for i, (k, v) in enumerate(rows):
+            y = 0.86 - i * 0.105
+            ax.text(0.02, y, k, transform=ax.transAxes, fontsize=11.5, color="#555", va="top")
+            ax.text(0.98, y, v, transform=ax.transAxes, fontsize=14, fontweight="bold", ha="right", va="top")
+    else:
+        ax = axes[len(cats) + 1]
+        vals = [metrics["categories"][k][f"within_{int(lim)}_min_pct"] for k in cats]
+        ax.barh(range(len(cats)), vals, height=0.55, color=[c.COLORS[k] for k in cats])
+        ax.set_yticks(range(len(cats)), [k.replace("_", " ") for k in cats])
+        ax.set_ylim(-0.5, len(cats) - 0.5)
+        ax.invert_yaxis()
+        ax.set_xlim(0, 100)
+        ax.set_xlabel(f"% of area within {lim:.0f} min ({args.mode})")
+        for i, v in enumerate(vals):
+            ax.text(v + 1, i, f"{v:.0f}%", va="center", fontsize=10)
+        for s in ("top", "right"):
+            ax.spines[s].set_visible(False)
+        ax.set_title("Coverage", loc="left", fontsize=13, fontweight="bold")
     for ax in axes[n:]:
         ax.axis("off")
     handles = [
-        Line2D([0], [0], marker="s", ls="", color=c.ISO_COLORS[t], markersize=9, label=f"≤ {t} min")
-        for t in (5, 10, 15)
+        Line2D([0], [0], marker="s", ls="", color=c.ISO_COLORS[t], markersize=9, label=f"≤ {t:g} min")
+        for t in sorted({5, 10, lim})
     ]
     fig.legend(handles=handles, loc="lower left", ncol=3, frameon=False, bbox_to_anchor=(0.01, 0.0))
     fig.suptitle(

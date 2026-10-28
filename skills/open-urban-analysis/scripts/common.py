@@ -39,7 +39,10 @@ CATEGORIES = {
     "market": {"amenity": ["marketplace"], "shop": ["supermarket"]},
     "bus_stop": {"highway": ["bus_stop"], "public_transport": ["platform"]},
     "rail": {"railway": ["station", "halt", "tram_stop"], "station": ["subway", "light_rail"]},
+    "transjakarta": {"highway": ["bus_stop"], "public_transport": ["platform"]},
 }
+# Categories that are a subset of a tag filter, picked by a regex over the stop's name, network, operator or brand.
+CATEGORY_MATCH = {"transjakarta": r"trans ?jakarta|busway|\btj\b"}
 
 
 # Public Overpass servers, tried in turn when one is at capacity. All are volunteer-run: back off, do not hammer.
@@ -125,6 +128,72 @@ def buffered(aoi, buffer_m):
     return g.to_crs(utm).buffer(buffer_m).to_crs(4326).iloc[0]
 
 
+# ---- offline backend: a Geofabrik extract clipped with osmium ------------------------------------------------
+# Set OUA_PBF to a .osm.pbf (for example https://download.geofabrik.de/asia/indonesia/java-latest.osm.pbf) and the
+# graph and POIs come from it instead of Overpass: same OSMnx code, no shared server, reproducible for a given file.
+# Needs the `osmium` command (brew install osmium-tool). The clipped region is cached next to the OSMnx cache.
+
+# The same exclusions OSMnx applies to its "walk" and "drive" network types, so the offline graph matches the Overpass one.
+WALK_DROP = {"abandoned", "bus_guideway", "construction", "cycleway", "motor", "no", "planned", "platform", "proposed",
+             "raceway", "razed", "steps"}  # fmt: skip
+DRIVE_KEEP = {"motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary",
+              "secondary_link", "tertiary", "tertiary_link", "unclassified", "residential", "living_street"}  # fmt: skip
+
+
+def local_pbf():
+    p = os.environ.get("OUA_PBF")
+    return Path(p).expanduser() if p else None
+
+
+def _local_xml(poly):
+    """Clip the OUA_PBF extract to the polygon's bounding box and write it as OSM XML (cached by box)."""
+    import hashlib
+    import subprocess
+
+    bbox = ",".join(f"{v:.5f}" for v in poly.bounds)
+    key = hashlib.sha1(f"{local_pbf().name}{bbox}".encode()).hexdigest()[:16]
+    out = Path(ox.settings.cache_folder) / f"extract-{key}.osm"
+    if not out.exists():
+        tmp = out.with_suffix(".pbf")
+        subprocess.run(["osmium", "extract", "-b", bbox, "-O", "-o", str(tmp), str(local_pbf())], check=True)
+        subprocess.run(["osmium", "cat", "-O", "-f", "osm", "-o", str(out), str(tmp)], check=True)
+        tmp.unlink()
+    return out
+
+
+def _local_graph(poly, mode):
+    """The OSMnx graph for `mode` from the local extract: highways of the right classes, simplified, largest component."""
+    G = ox.graph_from_xml(_local_xml(poly), bidirectional=(mode == "walk"), simplify=False, retain_all=True)
+    drop = []
+    for u, v, k, d in G.edges(keys=True, data=True):
+        hw = d.get("highway")
+        hw = hw[0] if isinstance(hw, list) else hw
+        if d.get("area") == "yes":
+            bad = True
+        elif mode == "walk":
+            bad = (
+                hw in WALK_DROP
+                or d.get("foot") == "no"
+                or d.get("service") == "private"
+                or d.get("access") == "private"
+            )
+        else:
+            bad = (
+                hw not in DRIVE_KEEP
+                or d.get("motor_vehicle") == "no"
+                or d.get("motorcar") == "no"
+                or d.get("access") == "private"
+            )
+        if bad:
+            drop.append((u, v, k))
+    G.remove_edges_from(drop)
+    G.remove_nodes_from(list(nx.isolates(G)))
+    G = ox.truncate.truncate_graph_polygon(G, poly, truncate_by_edge=True)
+    G = ox.truncate.largest_component(ox.simplification.simplify_graph(G), strongly=True)
+    nx.set_node_attributes(G, ox.stats.count_streets_per_node(G), "street_count")
+    return G
+
+
 def with_retry(fn, *args, tries=12, **kwargs):
     """Call an OSMnx download, and when Overpass is busy (502/504/429, timeout) wait with exponential backoff and move to
     the next public server. Responses are cached, so a retry after a crash costs nothing for finished queries."""
@@ -146,7 +215,11 @@ def with_retry(fn, *args, tries=12, **kwargs):
 
 def fetch_graph(aoi, mode="walk", buffer_m=1500, speed_kmh=WALK_KMH):
     """Street network around the AOI, projected to UTM, with `travel_time` (seconds) on every edge."""
-    G = with_retry(ox.graph_from_polygon, buffered(aoi, buffer_m), network_type=mode, simplify=True)
+    poly = buffered(aoi, buffer_m)
+    if local_pbf():
+        G = _local_graph(poly, mode)
+    else:
+        G = with_retry(ox.graph_from_polygon, poly, network_type=mode, simplify=True)
     G = ox.project_graph(G)
     if mode == "walk":
         for _, _, d in G.edges(data=True):
@@ -169,8 +242,12 @@ def _all_pois(aoi, buffer_m):
             for k, v in spec.items():
                 tags.setdefault(k, [])
                 tags[k] += [x for x in v if x not in tags[k]]
+        poly = buffered(aoi, buffer_m)
         try:
-            gdf = with_retry(ox.features_from_polygon, buffered(aoi, buffer_m), tags).reset_index(drop=True)
+            if local_pbf():
+                gdf = ox.features_from_xml(_local_xml(poly), polygon=poly, tags=tags).reset_index(drop=True)
+            else:
+                gdf = with_retry(ox.features_from_polygon, poly, tags).reset_index(drop=True)
         except ox._errors.InsufficientResponseError:
             gdf = gpd.GeoDataFrame({"name": []}, geometry=[], crs=4326)
         if "name" not in gdf:
@@ -186,6 +263,10 @@ def fetch_pois(aoi, category, buffer_m=1500, tags=None):
     for key, values in (tags or CATEGORIES[category]).items():
         if key in gdf:
             mask |= gdf[key].isin(values).to_numpy()
+    if category in CATEGORY_MATCH:
+        cols = [c_ for c_ in ("name", "network", "operator", "brand") if c_ in gdf]
+        text = gdf[cols].fillna("").astype(str).agg(" ".join, axis=1).str.lower()
+        mask &= text.str.contains(CATEGORY_MATCH[category], regex=True).to_numpy()
     return gdf[mask][["name", "geometry"]].reset_index(drop=True).assign(category=category)
 
 
@@ -277,7 +358,7 @@ def isochrones(G, surface, limits, buffer_m=40):
 # ---- outputs -------------------------------------------------------------------------------------------------
 
 COLORS = {"hospital": "#d62728", "clinic": "#e377c2", "school": "#1f77b4", "park": "#2ca02c", "market": "#ff7f0e",
-          "bus_stop": "#9467bd", "rail": "#8c564b"}  # fmt: skip
+          "bus_stop": "#9467bd", "rail": "#8c564b", "transjakarta": "#17becf"}  # fmt: skip
 ISO_COLORS = {5: "#8fcca6", 10: "#fbd3a0", 15: "#f2aaa4"}  # opaque tints, drawn widest first
 
 
