@@ -1,0 +1,28 @@
+[project]
+name = "open-urban-analysis"
+version = "0.1.0"
+description = "Answer questions about a city from free OpenStreetMap data: walking access, street networks, road closures and walkability. Agent skill and Deep Agents runner"
+license = "MIT"
+readme = "README.md"
+authors = [
+    { name = "Dzaky Zakiyal Fawwaz", email = "dzakybd@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "deepagents>=0.7.25",
+    "folium>=0.19",
+    "geopandas>=1.0",
+    "langchain-openai==1.7.2",
+    "matplotlib>=3.9",
+    "momepy>=0.9",
+    "networkx>=3.3",
+    "numpy>=2.0",
+    "osmnx>=2.0",
+    "rasterio>=1.5.2",
+    "scikit-learn>=1.9.1",
+    "scipy>=1.18.1",
+    "shapely>=2.0",
+]
+
+[tool.ruff]
+line-length = 120

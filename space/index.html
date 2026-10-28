@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>open-urban-analysis</title>
+<meta name="description" content="Five questions about Indonesian cities, answered from free OpenStreetMap data: a 15-minute city, a bridge closure, walkability, transit access and green space.">
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --fg: #1d1d1b; --muted: #6b6b66; --line: #e2e2dc; --accent: #1f5fa8;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #141413; --panel: #1d1d1b; --fg: #ecece6; --muted: #a3a39b; --line: #33332f; --accent: #7fb2ee; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 26px; margin: 0 0 4px; }
+h2 { font-size: 17px; margin: 0 0 10px; }
+p { margin: 0 0 8px; }
+a { color: var(--accent); }
+.muted { color: var(--muted); }
+code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.tabs button, .seg button { border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 999px; padding: 6px 14px; font: inherit; cursor: pointer; }
+.tabs button[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.seg button { font-size: 13px; padding: 4px 12px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+@media (max-width: 700px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.stat b { display: block; font-size: 22px; }
+.stat span { font-size: 13px; color: var(--muted); }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+@media (max-width: 860px) { .row { grid-template-columns: 1fr; } }
+img { width: 100%; height: auto; border-radius: 6px; display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+td { padding: 4px 6px; border-bottom: 1px solid var(--line); }
+td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.answer { white-space: pre-wrap; font-size: 14px; }
+footer { margin-top: 28px; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>open-urban-analysis</h1>
+  <p class="muted">Ask a question about a city, get an answer from free OpenStreetMap data. Street networks, walking isochrones and routing computed with OSMnx, NetworkX, GeoPandas and momepy. No account, no API key. This page shows precomputed runs from the skill. OpenStreetMap can lack facilities that exist: a gap on a map is not proof that a facility is missing.</p>
+  <p>Code: <a href="https://github.com/dzakybd/open-urban-analysis">github.com/dzakybd/open-urban-analysis</a> &middot;
+    Write-up: <a href="https://dzaky.ai.id">dzaky.ai.id</a></p>
+
+  <div class="tabs" id="tabs" role="group" aria-label="Use case"></div>
+  <h2 id="title" style="margin-top:18px"></h2>
+  <p class="muted" id="subtitle"></p>
+  <div class="stats" id="stats"></div>
+
+  <div class="row" id="gallery-row">
+    <section class="panel">
+      <div class="seg" id="views" role="group" aria-label="Picture"></div>
+      <img id="scene" alt="">
+      <iframe id="frame" title="Interactive map" loading="lazy" style="width:100%;height:560px;border:0;border-radius:6px" hidden></iframe>
+      <p class="muted" id="scene-note" style="margin-top:8px"></p>
+    </section>
+    <section class="panel" id="side">
+      <h2 id="side-title">Detail</h2>
+      <table id="classes"></table>
+      <p id="note" style="margin-top:10px"></p>
+      <h2 style="margin-top:14px">Ground truth</h2>
+      <ul id="refs" style="margin:0;padding-left:18px"></ul>
+    </section>
+  </div>
+
+  <section class="panel" id="answer-panel" style="margin-top:16px" hidden>
+    <h2>The Deep Agent's answer</h2>
+    <div class="answer" id="answer"></div>
+  </section>
+
+  <footer class="muted">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL), read through OSMnx and the Overpass API. Population: GHSL GHS-POP R2023A (JRC), a modelled grid, not a census. Travel times are free-flow network estimates at 4.8 km/h walking. OSM has no sidewalk quality, shade or safety.</footer>
+</main>
+<script>
+let cases = [], current = null, view = 0;
+
+function el(tag, attrs = {}, text = "") {
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+  if (text) e.textContent = text;
+  return e;
+}
+
+function render() {
+  const c = current;
+  document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.id === c.id));
+  document.getElementById("title").textContent = c.title;
+  document.getElementById("subtitle").textContent = [c.subtitle, c.sensor, c.dates].filter(Boolean).join(" · ");
+  document.getElementById("stats").replaceChildren(...c.stats.map(([v, l]) => {
+    const d = el("div", { class: "stat" });
+    d.append(el("b", {}, v), el("span", {}, l));
+    return d;
+  }));
+  const hasImages = c.images.length > 0;
+  document.getElementById("gallery-row").style.gridTemplateColumns = hasImages ? "" : "1fr";
+  document.querySelector("#gallery-row .panel").hidden = !hasImages;
+  if (hasImages) {
+    view = Math.min(view, c.images.length - 1);
+    const views = document.getElementById("views");
+    views.replaceChildren(...c.images.map(([f, label], i) => {
+      const b = el("button", { type: "button", "aria-pressed": String(i === view) }, label);
+      b.onclick = () => { view = i; render(); };
+      return b;
+    }));
+    const img = document.getElementById("scene"), frame = document.getElementById("frame");
+    const file = c.images[view][0], isMap = file.endsWith(".html");
+    img.hidden = isMap;
+    frame.hidden = !isMap;
+    if (isMap) frame.src = `data/${c.id}/${file}`;
+    else { img.src = `data/${c.id}/${file}`; img.alt = `${c.title}: ${c.images[view][1]}`; }
+    document.getElementById("scene-note").textContent = c.images[view][1];
+  }
+  const table = document.getElementById("classes");
+  table.replaceChildren(...c.table.map(([k, v]) => {
+    const tr = el("tr");
+    tr.append(el("td", {}, k), el("td", {}, v));
+    return tr;
+  }));
+  document.getElementById("side-title").textContent = c.table_title || (c.table.length ? "Details" : "How to read this");
+  document.getElementById("note").textContent = c.note;
+  document.getElementById("refs").replaceChildren(...c.refs.map(([text, url]) => {
+    const li = el("li");
+    const a = el("a", { href: url, target: "_blank", rel: "noopener" }, text);
+    li.append(a);
+    return li;
+  }));
+  const panel = document.getElementById("answer-panel");
+  panel.hidden = !c.answer;
+  if (c.answer) document.getElementById("answer").textContent = c.answer.replace(/\]\(\s*\/[^)]*\)/g, "]").replace(/\*\*/g, "");
+}
+
+fetch("data/index.json").then((r) => r.json()).then((data) => {
+  cases = data;
+  current = cases[0];
+  const tabs = document.getElementById("tabs");
+  cases.forEach((c) => {
+    const b = el("button", { type: "button", "data-id": c.id }, c.title);
+    b.onclick = () => { current = c; view = 0; render(); };
+    tabs.append(b);
+  });
+  render();
+});
+</script>
+</body>
+</html>
