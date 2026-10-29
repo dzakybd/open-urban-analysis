@@ -153,6 +153,7 @@ def _local_xml(poly):
     bbox = ",".join(f"{v:.5f}" for v in poly.bounds)
     key = hashlib.sha1(f"{local_pbf().name}{bbox}".encode()).hexdigest()[:16]
     out = Path(ox.settings.cache_folder) / f"extract-{key}.osm"
+    out.parent.mkdir(parents=True, exist_ok=True)
     if not out.exists():
         tmp = out.with_suffix(".pbf")
         subprocess.run(["osmium", "extract", "-b", bbox, "-O", "-o", str(tmp), str(local_pbf())], check=True)

@@ -13,7 +13,7 @@ short_description: "Walking access, bridge closure, walkability in Indonesia"
 
 Ask a question about a city, get an answer from free OpenStreetMap data. Street networks, walking isochrones and routing computed with OSMnx, NetworkX, GeoPandas and momepy, with Folium maps. No account and no API key.
 
-Five cases in Indonesia, each checked against an independent source: a 15-minute city in South Jakarta, the closure of the Gondang I bridge on the Tulungagung-Trenggalek road, Menteng against BSD City, a transit-access check in Jakarta, and green-space access weighted by population. Each view has the interactive map, the numbers, the figure and the sources. The page calls no model.
+Five cases in Indonesia. The bridge closure is checked against news reports of the diversion the police announced; the other cases are what OSM itself records, and each view says where a check is missing or only partial. Each view has the interactive map, the numbers, the figure and the sources. The page calls no model.
 
 Two versions: a skill for coding agents (`npx skills add dzakybd/open-urban-analysis`) and a LangChain Deep Agents version for your own agent workflow. Code: [github.com/dzakybd/open-urban-analysis](https://github.com/dzakybd/open-urban-analysis).
 

@@ -4,7 +4,7 @@
 # ///
 """Road or bridge closure simulation: remove street edges from the network and measure what changes.
 
-    uv run closure.py work/aoi.json --mode drive --close-near=-8.0717,111.84665,30 --only-highway trunk \
+    uv run closure.py work/aoi.json --mode drive --close-near=-8.0717,111.84665,150 \
         --od "Tulungagung|-8.0654,111.9030|Trenggalek|-8.0505,111.7090" --poi hospital --out work/closure
 
 --close-near=LAT,LNG,M removes every edge within M metres of the point (--bridge-only keeps it to edges tagged as

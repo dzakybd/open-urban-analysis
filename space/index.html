@@ -35,6 +35,7 @@ code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-si
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
 @media (max-width: 860px) { .row { grid-template-columns: 1fr; } }
 img { width: 100%; height: auto; border-radius: 6px; display: block; }
+img[hidden], iframe[hidden] { display: none; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 td { padding: 4px 6px; border-bottom: 1px solid var(--line); }
 td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
@@ -65,7 +66,7 @@ footer { margin-top: 28px; font-size: 13px; }
       <h2 id="side-title">Detail</h2>
       <table id="classes"></table>
       <p id="note" style="margin-top:10px"></p>
-      <h2 style="margin-top:14px">Ground truth</h2>
+      <h2 style="margin-top:14px">Sources and checks</h2>
       <ul id="refs" style="margin:0;padding-left:18px"></ul>
     </section>
   </div>
@@ -75,7 +76,7 @@ footer { margin-top: 28px; font-size: 13px; }
     <div class="answer" id="answer"></div>
   </section>
 
-  <footer class="muted">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL), read through OSMnx and the Overpass API. Population: GHSL GHS-POP R2023A (JRC), a modelled grid, not a census. Travel times are free-flow network estimates at 4.8 km/h walking. OSM has no sidewalk quality, shade or safety.</footer>
+  <footer class="muted">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL), read through OSMnx from a dated Geofabrik extract of Java (27 Oct 2026) with osmium; one Tebet cross-check ran against the live Overpass API. Population: GHSL GHS-POP R2023A (JRC), a modelled grid, not a census. Travel times are free-flow network estimates at 4.8 km/h walking. OSM has no sidewalk quality, shade or safety.</footer>
 </main>
 <script>
 let cases = [], current = null, view = 0;

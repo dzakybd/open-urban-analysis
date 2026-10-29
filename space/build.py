@@ -72,13 +72,8 @@ def tebet():
         "Tebet, South Jakarta · 1.5 km radius · 15-minute walk",
         stats,
         table,
-        "Every route is computed on the OSM street graph at 4.8 km/h; a white cell on the figure has no mapped hospital, school, park or market within 15 minutes. One dental clinic in Tebet is tagged amenity=hospital in OSM; the figure excludes it, and the table shows both readings. Markets and small clinics are what OSM maps least, so treat those bars as upper bounds.",
-        [
-            [
-                "OpenStreetMap: the run's POI list (Ocean Dental Tebet is tagged amenity=hospital).",
-                "https://www.openstreetmap.org/search?query=Ocean%20Dental%20Tebet",
-            ],
-        ],
+        "Every route is computed on the OSM street graph at 4.8 km/h; a white cell on the figure has no mapped hospital, school, park or market within 15 minutes. One dental clinic in Tebet is tagged amenity=hospital in OSM; the figure excludes it, and the table shows both readings. Markets and small clinics are what OSM maps least, so those bars are lower bounds on real access: an unmapped facility would only raise them. This case has no independent ground truth; the closest check is the same run against the live Overpass API, which agrees to a few percentage points.",
+        [],
         [["figure.png", "Isochrones, per category and combined"], ["map.html", "Interactive map"]],
     )
 
@@ -122,7 +117,7 @@ def gondang():
         "Jembatan Gondang I, Tulungagung–Trenggalek national road · closed 2 Jun 2026",
         stats,
         table,
-        "The simulation removes every road edge within 150 m of the bridge (OSM draws the bridge as a polygon with alley bridges beside it, so a tighter radius is bypassed). The car detour follows the lanes the police announced for light vehicles; on classified roads only — a bus — the model sends traffic on the long southern loop through Campurdarat and Pakel, the diversion announced for heavy vehicles. Minutes are free-flow; queueing at the diversion adds more. The bridge reopened on 24 Oct 2026 while the new span is finished.",
+        "The simulation removes every road edge within 150 m of the bridge (OSM draws the bridge as a polygon with alley bridges beside it, so a tighter radius is bypassed). The car detour follows the lanes the police announced for light vehicles; on classified roads only — a bus — the model swings south through the same Campurdarat corridor the police announced for heavy vehicles. It does not match the announced detour's length: the model's bus detour is 1.1 km shorter than the direct run, while the announced heavy route adds about 10 km, because the named trips end inside the 8 km analysis disc and OSM's free-flow model does not see the road width that made the police choose the long loop. Minutes are free-flow; queueing at the diversion adds more. The bridge reopened on 24 Oct 2026 while the new span is finished.",
         [
             [
                 "detik, 2 Jun 2026: closed six months; light vehicles via Kalangbret and Mojoarum lanes, buses and trucks via Tamanan–Campurdarat–Pakel–Bandung, about 10 km longer.",
