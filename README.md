@@ -9,7 +9,7 @@ Two versions:
 1. **A skill for coding agents** (Claude Code, Codex and others that load `SKILL.md` skills): `npx skills add dzakybd/open-urban-analysis`
 2. **A LangChain Deep Agents version** you can run in your own agent workflow (`agent/run.py`)
 
-See all five cases without installing anything: the static Space under `space/` (upload instructions at the bottom), each with its interactive map, figure, numbers and sources.
+See all five cases, no install needed: [huggingface.co/spaces/dzakybd/open-urban-analysis](https://huggingface.co/spaces/dzakybd/open-urban-analysis).
 
 ## Five cases, each checked against an independent source
 
@@ -184,4 +184,4 @@ The static showcase under `space/` is packed from the runs by:
 uv run python space/build.py
 ```
 
-which reads every number from the runs' own `metrics.json` into `space/data/`, then upload the folder to a Hugging Face static Space (`create_repo(repo_type="space", space_sdk="static")`, then `upload_folder`).
+which reads every number from the runs' own `metrics.json` into `space/data/`, then upload the folder to a Hugging Face static Space (`create_repo(repo_type="space", space_sdk="static")`, then `upload_folder`). The published Space: [huggingface.co/spaces/dzakybd/open-urban-analysis](https://huggingface.co/spaces/dzakybd/open-urban-analysis).
