@@ -16,7 +16,7 @@ import geopandas as gpd
 import networkx as nx
 import numpy as np
 import osmnx as ox
-from shapely.geometry import Point, box
+from shapely.geometry import Point, box, shape
 from shapely.ops import unary_union
 
 USER_AGENT = "open-urban-analysis/0.1 (https://github.com/dzakybd/open-urban-analysis)"
@@ -40,9 +40,13 @@ CATEGORIES = {
     "bus_stop": {"highway": ["bus_stop"], "public_transport": ["platform"]},
     "rail": {"railway": ["station", "halt", "tram_stop"], "station": ["subway", "light_rail"]},
     "transjakarta": {"highway": ["bus_stop"], "public_transport": ["platform"]},
+    # Indonesian public primary-care centres. Mappers tag them amenity=clinic, amenity=hospital or healthcare=centre
+    # (in Demak four of six are amenity=hospital), so the category is any health tag whose name says Puskesmas.
+    "puskesmas": {"amenity": ["hospital", "clinic", "doctors"], "healthcare": ["hospital", "clinic", "centre"]},
 }
 # Categories that are a subset of a tag filter, picked by a regex over the stop's name, network, operator or brand.
-CATEGORY_MATCH = {"transjakarta": r"trans ?jakarta|busway|\btj\b"}
+# Puskesmas Pembantu (pustu, a village sub-post) is not a puskesmas in the official counts, so it is left out.
+CATEGORY_MATCH = {"transjakarta": r"trans ?jakarta|busway|\btj\b", "puskesmas": r"^(?!.*(pembantu|pustu)).*puskesmas"}
 
 
 # Public Overpass servers, tried in turn when one is at capacity. All are volunteer-run: back off, do not hammer.
@@ -101,9 +105,11 @@ def circle(lat, lng, radius_m):
 
 
 def load_aoi(path):
-    """aoi.json -> dict with a shapely WGS84 `polygon` (a disc around lat/lng, or the bbox)."""
+    """aoi.json -> dict with a shapely WGS84 `polygon` (a boundary, a disc around lat/lng, or the bbox)."""
     aoi = load_json(path)
-    if aoi.get("radius_m"):
+    if aoi.get("geometry"):
+        aoi["polygon"] = shape(aoi["geometry"])
+    elif aoi.get("radius_m"):
         aoi["polygon"] = circle(aoi["lat"], aoi["lng"], aoi["radius_m"])
     else:
         aoi["polygon"] = box(*aoi["bbox"])
@@ -226,6 +232,12 @@ def fetch_graph(aoi, mode="walk", buffer_m=1500, speed_kmh=WALK_KMH):
         for _, _, d in G.edges(data=True):
             d["travel_time"] = d["length"] / (speed_kmh * 1000 / 3600)
     else:
+        # A simplified edge that merges road classes stores them as list(set(...)), in an order that changes with
+        # Python's string hashing, and OSMnx takes the speed of the first. Put the slowest class first, so the speed
+        # is the same on every run (and conservative).
+        for _, _, d in G.edges(data=True):
+            if isinstance(d.get("highway"), list):
+                d["highway"] = sorted(d["highway"], key=lambda h: (DRIVE_KMH.get(h, 25), h))
         G = ox.routing.add_edge_speeds(G, hwy_speeds=DRIVE_KMH, fallback=25)
         G = ox.routing.add_edge_travel_times(G)
     return G
@@ -359,7 +371,7 @@ def isochrones(G, surface, limits, buffer_m=40):
 # ---- outputs -------------------------------------------------------------------------------------------------
 
 COLORS = {"hospital": "#d62728", "clinic": "#e377c2", "school": "#1f77b4", "park": "#2ca02c", "market": "#ff7f0e",
-          "bus_stop": "#9467bd", "rail": "#8c564b", "transjakarta": "#17becf"}  # fmt: skip
+          "bus_stop": "#9467bd", "rail": "#8c564b", "transjakarta": "#17becf", "puskesmas": "#c51b7d"}  # fmt: skip
 ISO_COLORS = {5: "#8fcca6", 10: "#fbd3a0", 15: "#f2aaa4"}  # opaque tints, drawn widest first
 
 
@@ -412,8 +424,8 @@ def draw_streets(ax, G, color="#b5b5b0", lw=0.5):
 
 def frame(ax, G, aoi, title, subtitle=""):
     poly = project_polygon(aoi["polygon"], G.graph["crs"])
-    x, y = poly.exterior.xy
-    ax.plot(x, y, color="#333", lw=1.2, ls="--", zorder=6)
+    for part in getattr(poly, "geoms", [poly]):
+        ax.plot(*part.exterior.xy, color="#333", lw=1.2, ls="--", zorder=6)
     minx, miny, maxx, maxy = poly.bounds
     pad = (maxx - minx) * 0.03
     ax.set_xlim(minx - pad, maxx + pad)

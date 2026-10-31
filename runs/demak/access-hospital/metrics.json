@@ -1,0 +1,37 @@
+{
+  "place": "Kabupaten Demak, Jawa Tengah",
+  "mode": "drive",
+  "speed_kmh": 4.8,
+  "limit_min": 30.0,
+  "area_km2": 996.67,
+  "cells": 99665,
+  "cells_on_network": 41714,
+  "off_network_pct": 58.1,
+  "categories": {
+    "hospital": {
+      "in_area": 6,
+      "in_buffer": 25,
+      "reachable_nodes": 64,
+      "within_5_min_pct": 4.4,
+      "within_10_min_pct": 19.4,
+      "within_30_min_pct": 94.7,
+      "beyond_limit_pct": 5.3,
+      "median_min": 16.9,
+      "p90_min": 27.2,
+      "unreachable_pct": 0.0,
+      "beyond_limit_population": 18421,
+      "beyond_limit_population_pct": 2.0
+    }
+  },
+  "population": {
+    "source": "GHSL GHS-POP R2023A, 2020, 100 m (modelled, not a census)",
+    "total_on_network": 934861,
+    "total_in_area": 961250
+  },
+  "all_categories_within_limit_pct": 94.7,
+  "no_category_within_limit_pct": 5.3,
+  "beyond_limit_for_at_least_one_pct": 5.3,
+  "beyond_limit_for_at_least_one_population": 18421,
+  "beyond_limit_for_at_least_one_population_pct": 2.0,
+  "caveat": "OSM may lack POIs that exist; a gap here means 'not mapped within reach', not 'no facility'."
+}

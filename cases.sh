@@ -47,3 +47,17 @@ run runs/transit-benchmark/access $S/accessibility.py runs/transit-benchmark/aoi
 # 5. Green space with population: Tambora, North/West Jakarta
 loc runs/green --lat -6.1450 --lng 106.8000 --radius-m 1500 --name "Tambora, Jakarta Barat"
 run runs/green/access $S/accessibility.py runs/green/aoi.json --categories park --minutes 10 --population --title "Tambora, Jakarta: who lives within a 10-minute walk of a park?"
+
+# 6. Facility siting for a regency: Kabupaten Demak, Central Java. The whole regency (OSM admin relation 17241173,
+#    exported from the same extract), not a disc: a disc wide enough for Mranggen and Wedung takes in east Semarang city,
+#    and the official facility and population counts are per regency. Facilities up to 5 km outside the border count.
+B=runs/demak/boundary.geojson
+[ -f $B ] || { mkdir -p runs/demak; osmium getid -r -O -o runs/demak/boundary.osm.pbf "$OUA_PBF" r17241173
+  osmium export -O --geometry-types=polygon -o $B runs/demak/boundary.osm.pbf; rm runs/demak/boundary.osm.pbf; }
+loc runs/demak --boundary $B --name "Kabupaten Demak, Jawa Tengah"
+# amenity=hospital also holds four of the six OSM puskesmas, a clinic, a dental hospital, a maternity home and a massage
+# (bekam) parlour in and around Demak; they are dropped from the hospital run by name
+run runs/demak/access-hospital $S/accessibility.py runs/demak/aoi.json --mode drive --categories hospital --minutes 30 --buffer-m 5000 --population --exclude-name "puskesmas|klinik|gigi|bersalin|pijat|bekam" --title "Kabupaten Demak: who is beyond a 30-minute drive to a hospital?"
+run runs/demak/access-primary $S/accessibility.py runs/demak/aoi.json --mode drive --categories puskesmas,clinic --minutes 15 --buffer-m 5000 --population --title "Kabupaten Demak: who is beyond a 15-minute drive to primary care?"
+run runs/demak/coverage $S/poi_coverage.py runs/demak/aoi.json --categories hospital,puskesmas,clinic --title "Kabupaten Demak: health facilities in OSM"
+run runs/demak/siting $S/siting.py runs/demak/aoi.json --poi puskesmas --mode drive --threshold-min 15 --k 3 --buffer-m 5000 --population --title "Kabupaten Demak: where would 3 new puskesmas reach the most people?"

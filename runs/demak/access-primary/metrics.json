@@ -1,0 +1,51 @@
+{
+  "place": "Kabupaten Demak, Jawa Tengah",
+  "mode": "drive",
+  "speed_kmh": 4.8,
+  "limit_min": 15.0,
+  "area_km2": 996.67,
+  "cells": 99665,
+  "cells_on_network": 41714,
+  "off_network_pct": 58.1,
+  "categories": {
+    "puskesmas": {
+      "in_area": 6,
+      "in_buffer": 19,
+      "reachable_nodes": 23,
+      "within_5_min_pct": 4.8,
+      "within_10_min_pct": 18.9,
+      "within_15_min_pct": 39.8,
+      "beyond_limit_pct": 60.2,
+      "median_min": 16.9,
+      "p90_min": 28.3,
+      "unreachable_pct": 0.0,
+      "beyond_limit_population": 420857,
+      "beyond_limit_population_pct": 45.0
+    },
+    "clinic": {
+      "in_area": 8,
+      "in_buffer": 197,
+      "reachable_nodes": 199,
+      "within_5_min_pct": 5.1,
+      "within_10_min_pct": 19.5,
+      "within_15_min_pct": 38.5,
+      "beyond_limit_pct": 61.5,
+      "median_min": 17.6,
+      "p90_min": 28.5,
+      "unreachable_pct": 0.0,
+      "beyond_limit_population": 374514,
+      "beyond_limit_population_pct": 40.1
+    }
+  },
+  "population": {
+    "source": "GHSL GHS-POP R2023A, 2020, 100 m (modelled, not a census)",
+    "total_on_network": 934861,
+    "total_in_area": 961250
+  },
+  "all_categories_within_limit_pct": 24.6,
+  "no_category_within_limit_pct": 46.3,
+  "beyond_limit_for_at_least_one_pct": 75.4,
+  "beyond_limit_for_at_least_one_population": 533165,
+  "beyond_limit_for_at_least_one_population_pct": 57.0,
+  "caveat": "OSM may lack POIs that exist; a gap here means 'not mapped within reach', not 'no facility'."
+}

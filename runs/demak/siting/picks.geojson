@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "picks",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "rank": 1, "lat": -6.90631, "lng": 110.62352, "osm_node": 1986295735, "newly_covered": 107091, "cumulative_covered": 107091, "cumulative_share_of_unserved_pct": 25.4, "within_limit_after_pct": 66.4 }, "geometry": { "type": "Point", "coordinates": [ 110.62352, -6.90631 ] } },
+{ "type": "Feature", "properties": { "rank": 2, "lat": -7.02641, "lng": 110.51893, "osm_node": 6218150821, "newly_covered": 87942, "cumulative_covered": 195033, "cumulative_share_of_unserved_pct": 46.3, "within_limit_after_pct": 75.8 }, "geometry": { "type": "Point", "coordinates": [ 110.51893, -7.02641 ] } },
+{ "type": "Feature", "properties": { "rank": 3, "lat": -6.93774, "lng": 110.70875, "osm_node": 5346119544, "newly_covered": 44537, "cumulative_covered": 239570, "cumulative_share_of_unserved_pct": 56.9, "within_limit_after_pct": 80.6 }, "geometry": { "type": "Point", "coordinates": [ 110.70875, -6.93774 ] } }
+]
+}

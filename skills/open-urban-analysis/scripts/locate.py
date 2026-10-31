@@ -2,11 +2,16 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""Turn an address, a latitude and longitude, or a bbox into an AOI file (a disc of --radius-m around the point).
+"""Turn an address, a latitude and longitude, a bbox or a boundary into an AOI file (a disc of --radius-m around the
+point, unless a bbox or boundary is given).
 
     uv run locate.py "Menteng, Jakarta Pusat" --radius-m 1500 --out work/aoi.json
     uv run locate.py --lat -6.1957 --lng 106.8230 --radius-m 1500 --name Menteng --out work/aoi.json
     uv run locate.py --bbox 106.80,-6.21,106.84,-6.18 --out work/aoi.json
+    uv run locate.py --boundary work/demak.geojson --name "Kabupaten Demak" --out work/aoi.json
+
+--boundary takes a GeoJSON file whose first feature is the polygon (for example an OSM admin relation exported with
+`osmium getid -r` and `osmium export`), for a whole regency or city rather than a disc.
 
 Geocoding uses OpenStreetMap Nominatim (no key). Its policy allows at most one request per second, so geocode
 once and reuse aoi.json. Compare places on discs of the same radius so the areas are equal.
@@ -35,12 +40,20 @@ def main():
     ap.add_argument("--lat", type=float, help="latitude in degrees, with --lng, instead of a query")
     ap.add_argument("--lng", type=float)
     ap.add_argument("--bbox", help="west,south,east,north in degrees, instead of a query")
+    ap.add_argument("--boundary", help="GeoJSON file whose first feature is the area's polygon, instead of a disc")
     ap.add_argument("--radius-m", type=float, default=1500, help="radius of the disc around the point")
     ap.add_argument("--name", help="label for the place")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
-    if args.bbox:
+    if args.boundary:
+        geom = json.loads(Path(args.boundary).read_text())["features"][0]["geometry"]
+        flat = json.dumps(geom["coordinates"]).replace("[", "").replace("]", "").split(",")
+        xs, ys = [float(v) for v in flat[0::2]], [float(v) for v in flat[1::2]]
+        w, s, e, n = min(xs), min(ys), max(xs), max(ys)
+        aoi = {"name": args.name or args.boundary, "lat": args.lat if args.lat is not None else (s + n) / 2,
+               "lng": args.lng if args.lng is not None else (w + e) / 2, "bbox": [w, s, e, n], "geometry": geom}  # fmt: skip
+    elif args.bbox:
         w, s, e, n = (float(v) for v in args.bbox.split(","))
         aoi = {"name": args.name or args.query or "bbox", "lat": (s + n) / 2, "lng": (w + e) / 2, "bbox": [w, s, e, n]}
     elif args.lat is not None and args.lng is not None:
@@ -64,8 +77,9 @@ def main():
         aoi["bbox"] = bbox_of(aoi["lat"], aoi["lng"], args.radius_m)
     aoi["bbox"] = [round(v, 6) for v in aoi["bbox"]]
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(args.out).write_text(json.dumps(aoi, indent=2, ensure_ascii=False))
-    r = f"radius {aoi['radius_m']:.0f} m" if "radius_m" in aoi else "bbox"
+    # a boundary has thousands of vertices, so it is written on one line
+    Path(args.out).write_text(json.dumps(aoi, indent=None if "geometry" in aoi else 2, ensure_ascii=False))
+    r = f"radius {aoi['radius_m']:.0f} m" if "radius_m" in aoi else "boundary" if "geometry" in aoi else "bbox"
     print(f"{aoi['name']}\nlat {aoi['lat']:.5f}, lng {aoi['lng']:.5f}  {r}  -> {args.out}")
 
 

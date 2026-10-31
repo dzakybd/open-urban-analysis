@@ -29,3 +29,6 @@ Address or coordinates + question -> OpenStreetMap street graph and POIs (OSMnx)
 - Run accessibility on the reversed graph (travel time TO the POI), so one-way streets count the right way round.
 - argparse reads `"-8.06,111.88"` as a flag: write `--close-near=-8.06,111.88,60` with the `=`.
 - Look at the rendered figure.png and map.html before reporting a result.
+- In Indonesia `amenity=hospital` also tags puskesmas, clinics, dental hospitals and even massage parlours: list the hospital POIs and drop non-hospitals with `--exclude-name`; use the `puskesmas` category (name match) for primary care.
+- `ghsl_population` returns people per 100 m cell at each point, so population totals are only right on the 100 m grid: keep `--spacing-m 100` with `--population`.
+- A regency is compared with official counts on its boundary (`locate.py --boundary`), not a disc. A regency-wide drive run takes about 6 min per script (graph built from the clipped XML each time).

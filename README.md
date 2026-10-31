@@ -1,6 +1,6 @@
 # open-urban-analysis
 
-A skill you attach to an agent so it can answer a question about a city from free OpenStreetMap data (the same pattern as [open-satellite-analysis](https://github.com/dzakybd/open-satellite-analysis)). Give an address or coordinates and a question ("what share of this district is within a 15-minute walk of a hospital, school, park and market?", "what happens if this bridge closes?", "is this neighbourhood walkable?"). The skill builds the street graph and POIs with [OSMnx](https://github.com/gboeing/osmnx), computes every route, isochrone and metric with NetworkX, GeoPandas and momepy, and writes numbers, a Folium map and a figure. No account and no API key.
+A skill you attach to an agent so it can answer a question about a city from free OpenStreetMap data (the same pattern as [open-satellite-analysis](https://github.com/dzakybd/open-satellite-analysis)). Give an address or coordinates and a question ("what share of this district is within a 15-minute walk of a hospital, school, park and market?", "what happens if this bridge closes?", "is this neighbourhood walkable?", "where should the next three puskesmas go?"). The skill builds the street graph and POIs with [OSMnx](https://github.com/gboeing/osmnx), computes every route, isochrone and metric with NetworkX, GeoPandas and momepy, and writes numbers, a Folium map and a figure. No account and no API key.
 
 ![Tebet, South Jakarta: walking isochrones to hospitals, schools, parks and markets, with the share of the area beyond 15 minutes](runs/tebet/access/figure.png)
 
@@ -9,9 +9,9 @@ Two versions:
 1. **A skill for coding agents** (Claude Code, Codex and others that load `SKILL.md` skills): `npx skills add dzakybd/open-urban-analysis`
 2. **A LangChain Deep Agents version** you can run in your own agent workflow (`agent/run.py`)
 
-See all five cases, no install needed: [huggingface.co/spaces/dzakybd/open-urban-analysis](https://huggingface.co/spaces/dzakybd/open-urban-analysis).
+See all six cases, no install needed: [huggingface.co/spaces/dzakybd/open-urban-analysis](https://huggingface.co/spaces/dzakybd/open-urban-analysis).
 
-## Five cases, and how far each can be checked
+## Six cases, and how far each can be checked
 
 | Question | Place | Scripts | Result |
 |---|---|---|---|
@@ -20,8 +20,9 @@ See all five cases, no install needed: [huggingface.co/spaces/dzakybd/open-urban
 | Which neighbourhood is more walkable? | Menteng (1920s) vs BSD City (2000s), equal 1.5 km discs | `walkability.py` | Menteng: 400 intersections/km², 4.35 of 5 essentials within 10 min. BSD: 319/km², 1.66. No single score, on purpose |
 | Is this a transit desert? | Jagakarsa vs Dukuh Atas (benchmark), 2 km discs | `accessibility.py` | Rail within 10 min: 0% vs 34.8%. TransJakarta-tagged stops (mostly Mikrotrans feeders): 93% vs 95% |
 | Who lives beyond a 10-minute walk of a park? | Tambora, West Jakarta, 1.5 km disc | `accessibility.py --population` | 70.9% within 10 min; 54,350 people (30.0%) beyond it |
+| Where would three new puskesmas reach the most people? | Kabupaten Demak, Central Java, the whole regency (OSM boundary) | `accessibility.py --mode drive`, `poi_coverage.py`, `siting.py` | 2.0% of residents beyond a 30-min drive of a hospital, 45.0% beyond 15 min of a mapped puskesmas; three greedy picks lift 55.0% to 80.6%. But OSM has 5 of the 27 official puskesmas, and the first two picks land where unmapped ones stand |
 
-Only the closure has an independent source: news reports of the announced diversion (detik, Kompas, Antara, links below). The Tebet case is checked against the other OSM backend (live Overpass against the dated extract) and the transit case against TransJakarta's published corridor map, partially; Menteng–BSD and Tambora have no independent source. Those two are what OSM itself records, and each section says where a check is missing or impossible.
+The closure has an independent source: news reports of the announced diversion (detik, Kompas, Antara, links below). The Demak case is checked against the regency health office's facility and population counts, and the check mostly measures the map. The Tebet case is checked against the other OSM backend (live Overpass against the dated extract) and the transit case against TransJakarta's published corridor map, partially; Menteng–BSD and Tambora have no independent source. Those two are what OSM itself records, and each section says where a check is missing or impossible.
 
 ## What it adds over a plain OSMnx query
 
@@ -54,9 +55,10 @@ Or copy `skills/open-urban-analysis/` into your harness's skills folder. The scr
 | 4. POI coverage | `poi_coverage.py` | counts and density per km², network vs straight-line reach |
 | 5. Compare places | `walkability.py` | ten side-by-side metrics on equal discs, no score |
 | 6. Closure simulation | `closure.py` | detours for random and named trips, `--landmark` check against the announced diversion, cells losing access |
-| 7. Share a result | every script | `metrics.json`, `map.html` (Folium), `figure.png` (matplotlib) |
+| 7. Facility siting | `siting.py` | people beyond a travel-time limit, K new sites by greedy maximum coverage, people each one adds; `picks.geojson`, `unserved.geojson` |
+| 8. Share a result | every script | `metrics.json`, `map.html` (Folium), `figure.png` (matplotlib) |
 
-`cases.sh` runs the five showcase cases end to end; each step is skipped when its `metrics.json` exists, so reruns read the cache. The Overpass backend caches responses in `~/.cache/open-urban-analysis`; the offline backend caches `osmium` extracts there too (`OUA_CACHE` moves both).
+`locate.py --boundary` takes a GeoJSON polygon instead of a disc, for a whole regency (case 6 cuts the OSM admin relation out of the extract with `osmium`). `cases.sh` runs the six showcase cases end to end; each step is skipped when its `metrics.json` exists, so reruns read the cache. The Overpass backend caches responses in `~/.cache/open-urban-analysis`; the offline backend caches `osmium` extracts there too (`OUA_CACHE` moves both).
 
 ## The cases
 
@@ -139,6 +141,35 @@ Tambora packs about 181,000 people (GHSL 2020) into the 7.07 km² disc — rough
 
 ![Tambora park access](runs/green/access/figure.png)
 
+### 6. Facility siting for a regency: Kabupaten Demak
+
+`runs/demak/` — the whole regency: the OSM boundary (admin relation 17241173, 996.7 km²; the official area is 995.3 km²), driving with free-flow speeds, facilities up to 5 km outside the border counted (Demak's west edge is Semarang city, its east Kudus and Grobogan). A disc would not do: one wide enough for Mranggen in the south-west and Wedung in the north-east takes in east Semarang, and the official facility and population counts are per regency. 58.1% of the 100 m cells are more than 200 m from a drivable road (fishponds, paddy and coast) and are left out; they hold 2.7% of the GHSL population.
+
+| Question | OSM facilities in the regency (buffer) | Result | People beyond (GHSL) |
+|---|---|---|---|
+| Hospital within 30 min (`runs/demak/access-hospital`) | 4 distinct hospitals (25 points with the buffer) | 94.7% of the area, median 16.9 min | 18,421 (2.0%) |
+| Puskesmas within 15 min (`runs/demak/access-primary`) | 6 (19) | 39.8% of the area, median 16.9 min | 420,857 (45.0%) |
+| Any clinic within 15 min (same run) | 8 (197) | 38.5% | 374,514 (40.1%) |
+
+`poi_coverage.py` (`runs/demak/coverage`) counts what OSM has inside the boundary: 11 `amenity=hospital` points before the name filter, 6 puskesmas, 8 clinics, 0.01 per km² each. Its walking-time columns (median over 100 minutes) say only that a regency is not walkable end to end; the drive runs are the ones to read.
+
+`siting.py --poi puskesmas --threshold-min 15 --k 3` (`runs/demak/siting`) picks from 752 candidate street nodes on classified roads:
+
+| Pick | Location | Nearest OSM village | People newly within 15 min | Within 15 min after |
+|---|---|---|---|---|
+| today | | | | 55.0% |
+| 1 | -6.90631, 110.62352 | Katonsari (Demak town) | 107,091 | 66.4% |
+| 2 | -7.02641, 110.51893 | Mranggen | 87,942 | 75.8% |
+| 3 | -6.93774, 110.70875 | Kuwu, east of Demak town | 44,537 | 80.6% |
+
+![Demak puskesmas siting](runs/demak/siting/figure.png)
+
+**Against the official counts, the result is mostly about the map.** The regency health office lists 27 puskesmas (15 with inpatient beds, 12 outpatient), 52 puskesmas pembantu, 6 hospitals (2 regional, 4 private) and 1,259,682 residents in 14 kecamatan in the first half of 2025 ([Dinkes Kabupaten Demak, Bahan LPPD 2025](https://dinkes.demakkab.go.id/wp-content/uploads/2026/05/BAHAN-LPPD-DINKES-2025.Publish.pdf)); [Databoks, citing BPS](https://databoks.katadata.co.id/en/demographics/statistics/db94eb4b9b55630/2024-data-demak-regency-population-125-million), gives 1.25 million for 2024. OSM has 4 of the 6 hospitals (RSUD Sunan Kalijaga, RSUD Sultan Fatah, RS Fatimah Sulhan Muhammadiyah, RSU Pelita Anugrah), so the hospital number is close to the ground, and a missing hospital could only raise it. For puskesmas it is not: of the 27 official names, OSM has 5 (Demak 2, Guntur 1, Guntur 2, Karangawen 2, Mijen 2) plus one, "Puskesmas Bilo Pundenarum", that is not on the official list; 10 of the 14 kecamatan have none mapped. The first two picks land in Demak town and Mranggen, which officially have three puskesmas each (Demak 1 to 3, Mranggen 1 to 3), and OSM has only Demak 2, placed about 11 km north-east of pick 1. So the picks mark unmapped puskesmas, not missing ones. The useful output today is a mapping to-do list: map the 22 missing puskesmas, rerun, and only then read the picks as candidate sites. GHSL also counts fewer people than the official figure (961,250 in the regency against 1.26 million), so every "people" number is low by about a quarter.
+
+**Failure analysis: the tags.** `amenity=hospital` in and around Demak also holds four of the six OSM puskesmas, a clinic, a dental hospital, a maternity home and a bekam (cupping and massage) parlour; the hospital run drops them by name (`--exclude-name`), and an unnamed "medical center" point and a duplicate RSUD Sunan Kalijaga node stay in (the run counts 6 points in the regency for 4 distinct hospitals). Puskesmas are tagged `amenity=clinic`, `amenity=hospital` or `healthcare=centre`, so the new `puskesmas` category matches any health tag whose name says Puskesmas, and leaves out Puskesmas Pembantu, which the official count of 27 does not include.
+
+**What the model cannot see.** Drive times are free-flow by OSM road class, with no traffic and no motorbike shortcuts. Tidal flooding (rob) on the subsiding Sayung coast can put roads under water; the graph assumes every road is open. GHSL is a 100 m model of 2020, not a census.
+
 ## Deep Agents runner (ChatGPT sign-in)
 
 ```bash
@@ -157,8 +188,9 @@ The agent loads the same `SKILL.md`, runs the scripts in the work directory, and
 - **A gap is not a missing facility.** The scripts measure access to POIs that OSM has. A school, clinic or market nobody mapped looks like a gap; one mapped in the wrong place looks like access. Markets and small clinics are the least complete; every answer says how many POIs were found and names them.
 - **No sidewalk quality, shade, lighting, traffic speed or safety.** Mapped sidewalk share mostly measures mapper effort, as the Menteng–BSD comparison shows.
 - **Walking time is network distance at 4.8 km/h.** No stairs, slope, crossing waits or flooding. Mapped barriers (rivers, rail, toll roads) are respected; unmapped ones are not.
-- **Driving times are free-flow.** Closure detours on a busy day are longer than the minutes reported, and a missing back road in OSM makes detours look longer than they are.
-- **Areas are discs on a 100 m grid.** Cells more than 200 m from any street are dropped and reported. It is area, not people, unless `--population` is used — and GHSL is a model, not a census.
+- **Driving times are free-flow.** Closure detours on a busy day are longer than the minutes reported, and a missing back road in OSM makes detours look longer than they are. Flooded roads (tidal flooding on the Demak coast) are not modelled.
+- **A siting pick can be a mapping gap.** `siting.py` treats the facilities OSM has as all that exist. In Demak OSM has 5 of 27 official puskesmas, and the top picks land where unmapped ones stand: check every pick against an official list.
+- **Areas are discs (or a boundary with `--boundary`) on a 100 m grid.** Cells more than 200 m from any street are dropped and reported. It is area, not people, unless `--population` is used — and GHSL is a model, not a census.
 - **The offline backend and Overpass agree to a few percentage points** (65.4% vs 61.6% on the Tebet all-category metric), from graph-filter differences and OSM edits between the snapshot and the live API.
 
 ## Data and licences
@@ -166,6 +198,7 @@ The agent loads the same `SKILL.md`, runs the scripts in the work directory, and
 - Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, ODbL, via OSMnx (Overpass API) and dated [Geofabrik](https://download.geofabrik.de) extracts.
 - Geocoding: OpenStreetMap [Nominatim](https://nominatim.org).
 - Population: [GHSL GHS-POP R2023A](https://ghsl.jrc.ec.europa.eu/ghs_pop.php) 100 m (JRC), 2020 epoch, a modelled grid.
+- Demak official counts: [Dinkes Kabupaten Demak, Bahan LPPD 2025](https://dinkes.demakkab.go.id/wp-content/uploads/2026/05/BAHAN-LPPD-DINKES-2025.Publish.pdf) (facilities, 2025 population from Dukcapil); [Databoks citing BPS](https://databoks.katadata.co.id/en/demographics/statistics/db94eb4b9b55630/2024-data-demak-regency-population-125-million) (2024 population).
 
 Code: MIT.
 

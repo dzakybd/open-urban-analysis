@@ -208,7 +208,7 @@ def make_figure(aoi, res, metrics, args, path):
             ("within 5 min", f"{mm['within_5_min_pct']:.0f}%"),
             (f"within {lim:.0f} min", f"{mm[f'within_{int(lim)}_min_pct']:.0f}%"),
             (f"beyond {lim:.0f} min", f"{mm['beyond_limit_pct']:.0f}%"),
-            ("median walk", f"{mm['median_min']:.1f} min"),
+            (f"median {args.mode}", f"{mm['median_min']:.1f} min"),
             ("90th percentile", f"{mm['p90_min']:.1f} min"),
         ]
         if "beyond_limit_population" in mm:
@@ -238,7 +238,7 @@ def make_figure(aoi, res, metrics, args, path):
     for ax in axes[n:]:
         ax.axis("off")
     handles = [
-        Line2D([0], [0], marker="s", ls="", color=c.ISO_COLORS[t], markersize=9, label=f"≤ {t:g} min")
+        Line2D([0], [0], marker="s", ls="", color=c.ISO_COLORS.get(t, "#f2aaa4"), markersize=9, label=f"≤ {t:g} min")
         for t in sorted({5, 10, lim})
     ]
     fig.legend(handles=handles, loc="lower left", ncol=3, frameon=False, bbox_to_anchor=(0.01, 0.0))
@@ -252,7 +252,13 @@ def make_figure(aoi, res, metrics, args, path):
     fig.text(
         0.99,
         0.005,
-        f"{c.ATTRIBUTION}. Network distance at {args.speed_kmh} km/h; a gap may be an unmapped POI.",
+        f"{c.ATTRIBUTION}. "
+        + (
+            f"Network distance at {args.speed_kmh} km/h"
+            if args.mode == "walk"
+            else "Free-flow drive times by road class"
+        )
+        + "; a gap may be an unmapped POI.",
         ha="right",
         fontsize=7.5,
         color="#555",

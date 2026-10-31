@@ -1,6 +1,6 @@
 ---
 name: open-urban-analysis
-description: Answer questions about a city or neighbourhood from free OpenStreetMap data, with every route, distance and metric computed by OSMnx, NetworkX, GeoPandas and momepy. Walking accessibility (network-distance isochrones to hospitals, schools, parks, markets, transit; the 15-minute city), POI coverage, street-network connectivity (intersection density, circuity, node degree), walkability comparison between places as a set of transparent metrics, and road or bridge closure simulation (detour, lost access). No account or API key. Use when asked how walkable a place is, what is within 15 minutes on foot, who lacks access to a hospital, school, park, market or transit stop, how two neighbourhoods compare, or what happens if a road or bridge closes.
+description: Answer questions about a city or neighbourhood from free OpenStreetMap data, with every route, distance and metric computed by OSMnx, NetworkX, GeoPandas and momepy. Walking accessibility (network-distance isochrones to hospitals, schools, parks, markets, transit; the 15-minute city), POI coverage, street-network connectivity (intersection density, circuity, node degree), walkability comparison between places as a set of transparent metrics, road or bridge closure simulation (detour, lost access), and facility siting (where K new clinics, schools or other facilities would reach the most people now beyond a travel-time limit). No account or API key. Use when asked how walkable a place is, what is within 15 minutes on foot, who lacks access to a hospital, school, park, market or transit stop, how two neighbourhoods compare, what happens if a road or bridge closes, or where to build the next facilities.
 ---
 
 # Urban analysis from OpenStreetMap
@@ -23,16 +23,17 @@ State these when you answer:
 - **No sidewalk quality, shade, lighting, traffic speed or safety.** OSM has street geometry and tags. A street the map shows is not necessarily pleasant or safe to walk, and a street the map lacks (an alley, a gang) may exist.
 - **Walking time is network distance at a fixed speed.** No stairs, no slope, no waiting to cross a road, no flooding. Barriers that are mapped (rivers, rail, toll roads) are respected; barriers that are not are not.
 - **Driving times are free-flow.** A detour on a busy day is longer than the minutes reported.
-- **Areas are discs on a 100 m grid.** "Share of the area" counts grid cells; cells more than 200 m from any street (water, rail yards) are left out and reported. It is area, not population: a dense kampung and an empty golf course weigh the same.
+- **Areas are discs (or a boundary) on a 100 m grid.** "Share of the area" counts grid cells; cells more than 200 m from any street (water, rail yards) are left out and reported. It is area, not population: a dense kampung and an empty golf course weigh the same.
 
 ## 1. Pin the place: `locate.py`
 
 ```bash
 uv run SKILL_DIR/scripts/locate.py "Menteng, Jakarta Pusat" --radius-m 1500 --out WORK/aoi.json
 uv run SKILL_DIR/scripts/locate.py --lat -6.2615 --lng 106.8106 --radius-m 2000 --name Tebet --out WORK/aoi.json
+uv run SKILL_DIR/scripts/locate.py --boundary WORK/demak.geojson --name "Kabupaten Demak" --out WORK/aoi.json
 ```
 
-The area is a disc around the point; geocoding a district returns its centroid. Use `--lat/--lng` for coordinates (a negative latitude written as `"-6.2,106.8"` is read as a flag). Compare places on discs of the same radius, so the areas are equal. 1.5-2 km is a good size for walking questions; larger areas are slow to download.
+The area is a disc around the point; geocoding a district returns its centroid. For a whole regency or city, pass `--boundary` a GeoJSON polygon, for example the OSM admin relation cut from the extract with `osmium getid -r "$OUA_PBF" r<ID> -o b.osm.pbf && osmium export --geometry-types=polygon b.osm.pbf -o b.geojson` (`cases.sh` case 6 does this for Demak): official facility and population counts are per regency, so a boundary makes them comparable. Use `--lat/--lng` for coordinates (a negative latitude written as `"-6.2,106.8"` is read as a flag). Compare places on discs of the same radius, so the areas are equal. 1.5-2 km is a good size for walking questions; larger areas are slow to download.
 
 ## 2. Pick the capability
 
@@ -43,8 +44,9 @@ The area is a disc around the point; geocoding a district returns its centroid. 
 | How many POIs does the area have, and does a straight circle overstate reach? | `poi_coverage.py` | counts, density, median and p90 minutes, network vs straight-line reach |
 | Which of two places is more walkable? | `walkability.py` | side-by-side metrics, no single score |
 | What if this road or bridge closes? | `closure.py` | pairs slower or cut off, named-route detour with street names, cells losing access to a POI |
+| Where should the next K facilities go? | `siting.py` | people beyond the limit today, K picks by greedy maximum coverage, people each pick adds |
 
-POI categories: `hospital`, `clinic`, `school`, `park`, `market`, `bus_stop`, `rail`, `transjakarta` (stops whose name, network, operator or brand mentions TransJakarta — in practice mostly Mikrotrans feeder vans, not BRT corridors). Add a category in `scripts/common.py` (`CATEGORIES`, an OSM tag filter; `CATEGORY_MATCH` narrows it by a regex over the name) when a question needs another.
+POI categories: `hospital`, `clinic`, `school`, `park`, `market`, `bus_stop`, `rail`, `transjakarta` (stops whose name, network, operator or brand mentions TransJakarta — in practice mostly Mikrotrans feeder vans, not BRT corridors), `puskesmas` (Indonesian public primary-care centres: any hospital, clinic or healthcare tag whose name says Puskesmas, because mappers tag them `amenity=clinic`, `amenity=hospital` or `healthcare=centre`; Puskesmas Pembantu sub-posts are left out). `hospital` is `amenity=hospital`, which in Indonesia also catches puskesmas, clinics, dental hospitals and maternity homes: drop them with `--exclude-name` and list what remains. Add a category in `scripts/common.py` (`CATEGORIES`, an OSM tag filter; `CATEGORY_MATCH` narrows it by a regex over the name) when a question needs another.
 
 ## 3. Street network: `network_stats.py`
 
@@ -87,6 +89,14 @@ uv run SKILL_DIR/scripts/closure.py WORK/aoi.json --mode drive --close-near=-8.0
 ```
 
 Find the bridge's coordinates first (the news names it; look it up in Nominatim, then check the closed edge in `closed.geojson` and on `map.html`: a wrong match closes the wrong road). OSM often draws a bridge as a separate `man_made=bridge` polygon and leaves the road under it untagged, so `--bridge-only` can find nothing or the wrong span; close everything within a radius of the point instead (`--only-highway` narrows it to a road class). Check that routes actually change: in the Gondang run `--bridge-only` within 80 m removed four minor streets and changed nothing, and closing only the trunk road within 30 m was bypassed through alley bridges beside it; 150 m on every road cut the crossing. Use `--classes trunk,primary,secondary,tertiary` to simulate a bus or truck that cannot use small streets. It removes the edges, then reports the share of random trips that got slower, the median, 90th-percentile and maximum extra minutes, how many are cut off, each named route before and after with the streets the detour uses, and the cells that lose access to the nearest POI of a category. **Compare the detour streets with the diversion the authorities announced.** If they disagree, say so: either OSM lacks a road they use, or the announced route avoids roads the model thinks are fine (width, weight limits, traffic).
+
+## 8. Facility siting: `siting.py`
+
+```bash
+uv run SKILL_DIR/scripts/siting.py WORK/aoi.json --poi puskesmas --mode drive --threshold-min 15 --k 3 --population --out WORK/siting
+```
+
+Answers "where should the next K facilities go to reach the most people now beyond --threshold-min?". It times every 100 m cell to the nearest existing facility (reversed graph, like `accessibility.py`), takes as candidates the street nodes on trunk, primary, secondary or tertiary roads inside the area (one per 500 m square), and picks greedily: each pick is the candidate whose catchment holds the most still-unserved people (GHSL with `--population`, else cells). Read `beyond_limit_pct` and, per pick, `newly_covered`, `cumulative_share_of_unserved_pct` and `within_limit_after_pct`. **The existing facilities are the ones OSM has, so before reading a pick as a plan, check it against an official facility list:** in Demak OSM has 5 of the 27 official puskesmas, and the first two picks landed in Demak town and Mranggen, whose official puskesmas (Demak 1 and 3, Mranggen 1 to 3) are simply not mapped. A pick there is a mapping to-do before it is a building site. Drive times are free-flow, and flooding that cuts roads is not modelled.
 
 ## Answering
 

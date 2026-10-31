@@ -1,9 +1,9 @@
 """Pack the precomputed case runs into space/data for the Hugging Face Space.
 
-Every number comes from the run's own metrics.json, so nothing is retyped. Five cases: the 15-minute city in
+Every number comes from the run's own metrics.json, so nothing is retyped. Six cases: the 15-minute city in
 Tebet, the closure of Jembatan Gondang I on the Tulungagung-Trenggalek road, walkability in Menteng against
-BSD City, transit access in Jagakarsa against the Dukuh Atas benchmark, and park access in Tambora weighted
-by population.
+BSD City, transit access in Jagakarsa against the Dukuh Atas benchmark, park access in Tambora weighted
+by population, and puskesmas siting for Kabupaten Demak.
 
 Usage: uv run python space/build.py
 """
@@ -271,7 +271,68 @@ def green():
     )
 
 
-CASES = [tebet(), gondang(), walkability(), transit(), green()]
+def demak():
+    h = load("demak/access-hospital/metrics.json")
+    pc = load("demak/access-primary/metrics.json")
+    s = load("demak/siting/metrics.json")
+    hosp, pusk = h["categories"]["hospital"], pc["categories"]["puskesmas"]
+    last = s["picks"][-1]
+    stats = [
+        # matched by name against the Dinkes list: OSM's 6 in the regency include one that is not on it
+        [
+            "5 of 27",
+            f"official puskesmas are in OSM ({s['existing']['in_area']} OSM puskesmas, one not on the Dinkes list)",
+        ],
+        [f"{pusk['beyond_limit_population_pct']:.0f}%", "of residents beyond a 15-min drive of a mapped puskesmas"],
+        [
+            f"{100 - s['beyond_limit_pct']:.0f}% → {last['within_limit_after_pct']:.0f}%",
+            f"within 15 min after {len(s['picks'])} greedy picks",
+        ],
+        [f"{hosp['beyond_limit_population_pct']:.0f}%", "of residents beyond a 30-min drive of a hospital"],
+    ]
+    table = [
+        [
+            "hospital, 30 min",
+            f"{hosp['within_30_min_pct']:.0f}% of the area · median {hosp['median_min']:.1f} min · {hosp['beyond_limit_population']:,} people beyond",
+        ],
+        [
+            "puskesmas, 15 min",
+            f"{pusk['within_15_min_pct']:.0f}% of the area · {pusk['beyond_limit_population']:,} people beyond",
+        ],
+    ]
+    table += [
+        [
+            f"pick {p['rank']} ({p['lat']}, {p['lng']})",
+            f"+{p['newly_covered']:,} people · {p['within_limit_after_pct']}% within 15 min after",
+        ]
+        for p in s["picks"]
+    ]
+    table += [
+        ["population (GHSL 2020)", f"{h['population']['total_in_area']:,} in the regency (official 2025: 1,259,682)"]
+    ]
+    return case(
+        "facility-siting",
+        "Where would new puskesmas go?",
+        "Kabupaten Demak, Central Java · whole regency (OSM boundary) · 15-minute drive",
+        stats,
+        table,
+        "The question a regency planner asks: where would the next three puskesmas reach the most people now beyond a 15-minute drive? The script picks greedily from street nodes on classified roads. The answer is mostly about the map: OSM has 5 of the 27 official puskesmas, and the first two picks land in Demak town and Mranggen, whose official puskesmas are simply unmapped. Read the picks as a mapping to-do list before a building plan. Drive times are free-flow; tidal flooding that cuts coastal roads in Sayung is not modelled, and GHSL counts about 960,000 people against an official 1.26 million.",
+        [
+            [
+                "Dinkes Kabupaten Demak, Bahan LPPD 2025: 27 puskesmas (15 inpatient, 12 outpatient), 52 pustu, 6 hospitals, 1,259,682 residents (Dukcapil, 2025 semester I).",
+                "https://dinkes.demakkab.go.id/wp-content/uploads/2026/05/BAHAN-LPPD-DINKES-2025.Publish.pdf",
+            ],
+        ],
+        [
+            ["figure-siting.png", "Three greedy picks"],
+            ["map-siting.html", "Interactive map, siting"],
+            ["figure-hospital.png", "Hospital within 30 min"],
+            ["figure-primary.png", "Puskesmas and clinics within 15 min"],
+        ],
+    )
+
+
+CASES = [tebet(), gondang(), walkability(), transit(), green(), demak()]
 IMAGES = {
     "fifteen-minute": [["tebet/access/figure.png", "figure.png"], ["tebet/access/map.html", "map.html"]],
     "bridge-closure": [
@@ -292,6 +353,12 @@ IMAGES = {
         ["transit-benchmark/access/map.html", "map-dukuh.html"],
     ],
     "green-space": [["green/access/figure.png", "figure.png"], ["green/access/map.html", "map.html"]],
+    "facility-siting": [
+        ["demak/siting/figure.png", "figure-siting.png"],
+        ["demak/siting/map.html", "map-siting.html"],
+        ["demak/access-hospital/figure.png", "figure-hospital.png"],
+        ["demak/access-primary/figure.png", "figure-primary.png"],
+    ],
 }
 
 

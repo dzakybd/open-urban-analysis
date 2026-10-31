@@ -1,0 +1,71 @@
+{
+  "place": "Kabupaten Demak, Jawa Tengah",
+  "mode": "drive",
+  "poi": "puskesmas",
+  "threshold_min": 15.0,
+  "existing": {
+    "in_area": 6,
+    "in_buffer": 19,
+    "names": [
+      "PUSKESMAS BILO PUNDENARUM",
+      "PUSKESMAS GUNTUR 1",
+      "PUSKESMAS GUNTUR 2",
+      "PUSKESMAS NALUMSARI",
+      "Puskesmas Bangetayu Wetan",
+      "Puskesmas Bugangan",
+      "Puskesmas Demak II",
+      "Puskesmas Genuk",
+      "Puskesmas Godong 1",
+      "Puskesmas Karangawen II",
+      "Puskesmas Karangdoro",
+      "Puskesmas Kedungmundu",
+      "Puskesmas Lamper Tengah",
+      "Puskesmas Mijen II",
+      "Puskesmas Rowosari",
+      "Puskesmas Tlogosari Kulon",
+      "Puskesmas Tlogosari Wetan",
+      "Puskesmas Wergu Wetan",
+      "UPTD Puskesmas Gayamsari"
+    ]
+  },
+  "weight": "GHSL GHS-POP R2023A, 2020, 100 m (modelled, not a census)",
+  "total_people": 934861,
+  "beyond_limit_people": 420857,
+  "beyond_limit_pct": 45.0,
+  "candidates": 752,
+  "candidate_rule": "street nodes on primary/secondary/tertiary/trunk roads inside the area, one per 500 m square",
+  "method": "greedy maximum coverage of the unserved weight within the limit (free-flow drive times by OSM road class)",
+  "picks": [
+    {
+      "rank": 1,
+      "lat": -6.90631,
+      "lng": 110.62352,
+      "osm_node": 1986295735,
+      "newly_covered": 107091,
+      "cumulative_covered": 107091,
+      "cumulative_share_of_unserved_pct": 25.4,
+      "within_limit_after_pct": 66.4
+    },
+    {
+      "rank": 2,
+      "lat": -7.02641,
+      "lng": 110.51893,
+      "osm_node": 6218150821,
+      "newly_covered": 87942,
+      "cumulative_covered": 195033,
+      "cumulative_share_of_unserved_pct": 46.3,
+      "within_limit_after_pct": 75.8
+    },
+    {
+      "rank": 3,
+      "lat": -6.93774,
+      "lng": 110.70875,
+      "osm_node": 5346119544,
+      "newly_covered": 44537,
+      "cumulative_covered": 239570,
+      "cumulative_share_of_unserved_pct": 56.9,
+      "within_limit_after_pct": 80.6
+    }
+  ],
+  "caveat": "Existing facilities are the ones OSM has. An unmapped facility looks like a missing one, so a pick may fall where a facility exists but is not mapped: check every pick against an official list."
+}
