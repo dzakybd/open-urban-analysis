@@ -29,6 +29,21 @@
     ]
   },
   "weight": "GHSL GHS-POP R2023A, 2020, 100 m (modelled, not a census)",
+  "sources": [
+    {
+      "name": "OpenStreetMap, Geofabrik extract java-latest.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/indonesia/java-latest.osm.pbf",
+      "snapshot": "2026-10-27T21:23:59Z",
+      "licence": "ODbL 1.0, (c) OpenStreetMap contributors"
+    },
+    {
+      "name": "GHSL GHS-POP R2023A, 2020 epoch, 100 m (modelled, not a census)",
+      "publisher": "European Commission, Joint Research Centre",
+      "url": "https://data.jrc.ec.europa.eu/dataset/2ff68a52-5b5b-4a22-8f40-c41da8332cfe",
+      "doi": "10.2905/2FF68A52-5B5B-4A22-8F40-C41DA8332CFE",
+      "licence": "European Commission reuse notice (CC BY 4.0)"
+    }
+  ],
   "total_people": 934861,
   "beyond_limit_people": 420857,
   "beyond_limit_pct": 45.0,

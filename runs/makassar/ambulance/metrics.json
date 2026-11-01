@@ -1,0 +1,56 @@
+{
+  "place": "Kota Makassar (mainland), Sulawesi Selatan",
+  "mode": "drive",
+  "speed_kmh": 4.8,
+  "limit_min": 15.0,
+  "direction": "from the nearest POI (forward graph)",
+  "area_km2": 175.67,
+  "cells": 17568,
+  "cells_on_network": 14236,
+  "off_network_pct": 19.0,
+  "categories": {
+    "hospital": {
+      "in_area": 34,
+      "in_buffer": 40,
+      "reachable_nodes": 153,
+      "within_5_min_pct": 50.5,
+      "within_10_min_pct": 87.5,
+      "within_15_min_pct": 98.4,
+      "beyond_limit_pct": 1.6,
+      "median_min": 5.0,
+      "p90_min": 10.6,
+      "unreachable_pct": 0.0,
+      "beyond_limit_population": 4949,
+      "beyond_limit_population_pct": 0.3,
+      "within_5_min_population_pct": 70.5,
+      "within_10_min_population_pct": 95.4,
+      "within_15_min_population_pct": 99.7
+    }
+  },
+  "population": {
+    "source": "GHSL GHS-POP R2023A, 2020, 100 m (modelled, not a census)",
+    "total_on_network": 1556171,
+    "total_in_area": 1587244
+  },
+  "all_categories_within_limit_pct": 98.4,
+  "no_category_within_limit_pct": 1.6,
+  "beyond_limit_for_at_least_one_pct": 1.6,
+  "beyond_limit_for_at_least_one_population": 4949,
+  "beyond_limit_for_at_least_one_population_pct": 0.3,
+  "caveat": "OSM may lack POIs that exist; a gap here means 'not mapped within reach', not 'no facility'.",
+  "sources": [
+    {
+      "name": "OpenStreetMap, Geofabrik extract sulawesi-latest.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/indonesia/sulawesi-latest.osm.pbf",
+      "snapshot": "2026-10-30T21:24:51Z",
+      "licence": "ODbL 1.0, (c) OpenStreetMap contributors"
+    },
+    {
+      "name": "GHSL GHS-POP R2023A, 2020 epoch, 100 m (modelled, not a census)",
+      "publisher": "European Commission, Joint Research Centre",
+      "url": "https://data.jrc.ec.europa.eu/dataset/2ff68a52-5b5b-4a22-8f40-c41da8332cfe",
+      "doi": "10.2905/2FF68A52-5B5B-4A22-8F40-C41DA8332CFE",
+      "licence": "European Commission reuse notice (CC BY 4.0)"
+    }
+  ]
+}

@@ -43,10 +43,20 @@ CATEGORIES = {
     # Indonesian public primary-care centres. Mappers tag them amenity=clinic, amenity=hospital or healthcare=centre
     # (in Demak four of six are amenity=hospital), so the category is any health tag whose name says Puskesmas.
     "puskesmas": {"amenity": ["hospital", "clinic", "doctors"], "healthcare": ["hospital", "clinic", "centre"]},
+    # Minimarkets (Indomaret, Alfamart and independents) are shop=convenience; supermarkets stay in "market".
+    "convenience": {"shop": ["convenience"]},
+    # Places of worship whose name says masjid or musholla (the religion tag is often missing).
+    "mosque": {"amenity": ["place_of_worship"]},
+    # Traditional markets (pasar) only; "market" also counts shop=supermarket, which in Indonesia often tags minimarkets.
+    "marketplace": {"amenity": ["marketplace"]},
+    # Any mapped health facility (hospital, puskesmas, pustu, clinic, village health post): the nearest place to get care.
+    # Drop posyandu (a monthly session, not a facility) and the like with --exclude-name.
+    "health": {"amenity": ["hospital", "clinic", "doctors"], "healthcare": ["hospital", "clinic", "centre"]},
 }
 # Categories that are a subset of a tag filter, picked by a regex over the stop's name, network, operator or brand.
 # Puskesmas Pembantu (pustu, a village sub-post) is not a puskesmas in the official counts, so it is left out.
-CATEGORY_MATCH = {"transjakarta": r"trans ?jakarta|busway|\btj\b", "puskesmas": r"^(?!.*(pembantu|pustu)).*puskesmas"}
+CATEGORY_MATCH = {"transjakarta": r"trans ?jakarta|busway|\btj\b", "puskesmas": r"^(?!.*(pembantu|pustu)).*puskesmas",
+                  "mosque": r"masjid|mesjid|mosque|mus[h]?oll?a|langgar|surau"}  # fmt: skip
 
 
 # Public Overpass servers, tried in turn when one is at capacity. All are volunteer-run: back off, do not hammer.
@@ -179,7 +189,8 @@ def _local_graph(poly, mode):
             bad = True
         elif mode == "walk":
             bad = (
-                hw in WALK_DROP
+                hw is None  # a river, a boundary or any other way in the extract without a highway tag
+                or hw in WALK_DROP
                 or d.get("foot") == "no"
                 or d.get("service") == "private"
                 or d.get("access") == "private"
@@ -333,13 +344,15 @@ def make_grid(G, aoi, spacing_m=100, max_snap_m=200):
             "spacing_m": spacing_m, "cell_ha": spacing_m**2 / 1e4}  # fmt: skip
 
 
-def time_surface(G, sources, cutoff_min=None):
+def time_surface(G, sources, cutoff_min=None, reverse=True):
     """Minutes of travel from every node TO the nearest source node (multi-source Dijkstra on the reversed graph, so
-    one-way streets count the right way round)."""
+    one-way streets count the right way round). reverse=False gives minutes FROM the nearest source (an ambulance
+    leaving a hospital) on the forward graph."""
     if not sources:
         return {}
     cutoff = cutoff_min * 60 if cutoff_min else None
-    t = nx.multi_source_dijkstra_path_length(G.reverse(copy=False), sources, cutoff=cutoff, weight="travel_time")
+    g = G.reverse(copy=False) if reverse else G
+    t = nx.multi_source_dijkstra_path_length(g, sources, cutoff=cutoff, weight="travel_time")
     return {n: s / 60 for n, s in t.items()}
 
 
@@ -371,7 +384,8 @@ def isochrones(G, surface, limits, buffer_m=40):
 # ---- outputs -------------------------------------------------------------------------------------------------
 
 COLORS = {"hospital": "#d62728", "clinic": "#e377c2", "school": "#1f77b4", "park": "#2ca02c", "market": "#ff7f0e",
-          "bus_stop": "#9467bd", "rail": "#8c564b", "transjakarta": "#17becf", "puskesmas": "#c51b7d"}  # fmt: skip
+          "bus_stop": "#9467bd", "rail": "#8c564b", "transjakarta": "#17becf", "puskesmas": "#c51b7d",
+          "convenience": "#bcbd22", "mosque": "#006d2c", "health": "#c51b7d", "marketplace": "#d95f0e"}  # fmt: skip
 ISO_COLORS = {5: "#8fcca6", 10: "#fbd3a0", 15: "#f2aaa4"}  # opaque tints, drawn widest first
 
 
@@ -395,7 +409,7 @@ def add_pois(m, pois, color, label):
         c = r.geometry.representative_point()
         folium.CircleMarker(
             [c.y, c.x], radius=5, color="#fff", weight=1, fill=True, fill_color=color, fill_opacity=0.95,
-            tooltip=f"{label}: {r['name'] or '(unnamed in OSM)'}",
+            tooltip=f"{label}: {r['name'] if isinstance(r['name'], str) and r['name'] else '(unnamed in OSM)'}",
         ).add_to(fg)  # fmt: skip
     fg.add_to(m)
 
@@ -450,10 +464,19 @@ def parse_categories(text):
 
 
 def compute_access(
-    aoi, categories, mode="walk", buffer_m=1500, speed_kmh=WALK_KMH, spacing_m=100, G=None, exclude_name=None
+    aoi,
+    categories,
+    mode="walk",
+    buffer_m=1500,
+    speed_kmh=WALK_KMH,
+    spacing_m=100,
+    G=None,
+    exclude_name=None,
+    from_poi=False,
 ):
     """Download the street network and the POIs, then give every grid cell its travel time to the nearest POI of each
-    category. Returns a dict with the graph G, the grid and, per category, the POIs and the minutes per cell."""
+    category (from_poi=True: from the nearest POI, on the forward graph). Returns a dict with the graph G, the grid and,
+    per category, the POIs and the minutes per cell."""
     G = G or fetch_graph(aoi, mode, buffer_m, speed_kmh)
     grid = make_grid(G, aoi, spacing_m)
     out = {"G": G, "grid": grid, "cats": {}}
@@ -462,7 +485,7 @@ def compute_access(
         if exclude_name:
             pois = pois[~pois["name"].fillna("").str.contains(exclude_name, case=False, regex=True)]
         nodes = poi_nodes(G, pois)
-        surface = time_surface(G, nodes)
+        surface = time_surface(G, nodes, reverse=not from_poi)
         out["cats"][cat] = {
             "pois": pois,
             "nodes": nodes,
@@ -549,4 +572,109 @@ def ghsl_population(xs, ys, crs):
         with rasterio.open(tif) as src:
             vals = np.array([v[0] for v in src.sample(zip(mx[pick], my[pick]))], dtype=float)
         out[pick] = np.where(vals > 0, vals, 0)
+    return out
+
+
+# ---- optional population by age (WorldPop) -------------------------------------------------------------------
+
+# WorldPop Global2 R2025A v1: people per 3 arc-second cell (about 92 m near the equator) by age group, 2015-2030,
+# constrained to mapped settlement, one GeoTIFF per country, year and age group (about 160 MB each for Indonesia). The
+# server does not answer range requests, so each age group is downloaded whole, once, into the cache folder.
+WORLDPOP_URL = (
+    "https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/{year}/{iso}/v1/100m/constrained/"
+    "{iso_l}_t_{band:02d}_{year}_CN_100m_R2025A_v1.tif"
+)
+WORLDPOP_BANDS = [0, 1, *range(5, 95, 5)]  # first age of each group: under 1, 1-4, five-year groups, 90 and over
+
+
+def age_bands(text):
+    """'5-14' -> [5, 10]; '60+' -> [60, 65, ..., 90]. The ages must fall on WorldPop's group edges."""
+    lo, _, hi = text.replace("+", "-").partition("-")
+    lo, hi = int(lo), int(hi) + 1 if hi else 999
+    bands = [b for b in WORLDPOP_BANDS if lo <= b < hi]
+    if lo not in WORLDPOP_BANDS or hi not in [*WORLDPOP_BANDS[1:], 999] or not bands:
+        raise SystemExit(f"age {text!r} must start and end on WorldPop's groups (0, 1-4, 5-9, ..., 85-89, 90+)")
+    return bands
+
+
+def worldpop_population(xs, ys, crs, age, iso="IDN", year=2025, cell_m=100):
+    """People of an age range ('5-14', '60+') per cell_m grid cell at each projected point, from WorldPop's age and sex
+    structures (both sexes). A modelled grid, not a census. A WorldPop pixel is smaller than a 100 m cell, so each
+    sample is scaled by the cell's area over the pixel's: totals over the grid then match the raster's."""
+    import shutil
+    import urllib.request
+
+    import rasterio
+    from pyproj import Transformer
+
+    lon, lat = Transformer.from_crs(crs, 4326, always_xy=True).transform(np.asarray(xs), np.asarray(ys))
+    cache = Path(ox.settings.cache_folder) / "worldpop"
+    cache.mkdir(parents=True, exist_ok=True)
+    out = np.zeros(len(lon))
+    for band in age_bands(age):
+        url = WORLDPOP_URL.format(year=year, iso=iso.upper(), iso_l=iso.lower(), band=band)
+        tif = cache / url.rsplit("/", 1)[1]
+        if not tif.exists():
+            print(f"downloading {url}", file=sys.stderr)
+            part = tif.with_suffix(".part")
+            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=600) as r, open(part, "wb") as f:
+                shutil.copyfileobj(r, f, 1 << 20)
+            part.rename(tif)
+        with rasterio.open(tif) as src:
+            w, s, e, n = src.bounds
+            if not ((lon >= w) & (lon <= e) & (lat >= s) & (lat <= n)).all():
+                raise SystemExit(f"the area is outside {tif.name}: WorldPop files are per country (iso={iso})")
+            vals = np.array([v[0] for v in src.sample(zip(lon, lat))], dtype=float)
+            res_x, res_y = src.res
+        out += np.where(vals > 0, vals, 0)  # nodata is negative
+    pixel_m2 = (res_x * 111320 * np.cos(np.radians(lat))) * (res_y * 110574)
+    return out * cell_m**2 / pixel_m2
+
+
+# ---- data sources, for the `sources` field of metrics.json ---------------------------------------------------
+
+POPULATION_SOURCES = {
+    "ghsl": {
+        "name": "GHSL GHS-POP R2023A, 2020 epoch, 100 m (modelled, not a census)",
+        "publisher": "European Commission, Joint Research Centre",
+        "url": "https://data.jrc.ec.europa.eu/dataset/2ff68a52-5b5b-4a22-8f40-c41da8332cfe",
+        "doi": "10.2905/2FF68A52-5B5B-4A22-8F40-C41DA8332CFE",
+        "licence": "European Commission reuse notice (CC BY 4.0)",
+    },
+    "worldpop": {
+        "name": "WorldPop Global2 age and sex structures, individual countries, 100 m (3 arc s), R2025A v1, 2025, "
+        "constrained (modelled, not a census)",
+        "publisher": "WorldPop, University of Southampton",
+        "url": "https://hub.worldpop.org/geodata/listing?id=138",
+        "doi": "10.5258/SOTON/WP00841",
+        "licence": "CC BY 4.0",
+    },
+}
+
+
+def osm_source():
+    """Where the OSM data came from: the OUA_PBF extract with its replication timestamp (and OUA_PBF_URL if set), or
+    the Overpass API on the day of the run."""
+    pbf = local_pbf()
+    if not pbf:
+        return {"name": "OpenStreetMap via the Overpass API", "url": ox.settings.overpass_url,
+                "retrieved": time.strftime("%Y-%m-%d"), "licence": "ODbL 1.0, (c) OpenStreetMap contributors"}  # fmt: skip
+    import subprocess
+
+    ts = subprocess.run(
+        ["osmium", "fileinfo", "-g", "header.option.osmosis_replication_timestamp", str(pbf)],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    return {"name": f"OpenStreetMap, Geofabrik extract {pbf.name}", "url": os.environ.get("OUA_PBF_URL"),
+            "snapshot": ts or None, "licence": "ODbL 1.0, (c) OpenStreetMap contributors"}  # fmt: skip
+
+
+def data_sources(population=None, age=None):
+    """The `sources` list for metrics.json: OSM, plus the population grid when one was used."""
+    out = [osm_source()]
+    if population:
+        out.append({**POPULATION_SOURCES[population], **({"age": age} if age else {})})
     return out

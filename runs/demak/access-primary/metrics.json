@@ -3,6 +3,7 @@
   "mode": "drive",
   "speed_kmh": 4.8,
   "limit_min": 15.0,
+  "direction": "to the nearest POI (reversed graph)",
   "area_km2": 996.67,
   "cells": 99665,
   "cells_on_network": 41714,
@@ -20,7 +21,10 @@
       "p90_min": 28.3,
       "unreachable_pct": 0.0,
       "beyond_limit_population": 420857,
-      "beyond_limit_population_pct": 45.0
+      "beyond_limit_population_pct": 45.0,
+      "within_5_min_population_pct": 6.4,
+      "within_10_min_population_pct": 23.7,
+      "within_15_min_population_pct": 55.0
     },
     "clinic": {
       "in_area": 8,
@@ -34,7 +38,10 @@
       "p90_min": 28.5,
       "unreachable_pct": 0.0,
       "beyond_limit_population": 374514,
-      "beyond_limit_population_pct": 40.1
+      "beyond_limit_population_pct": 40.1,
+      "within_5_min_population_pct": 15.7,
+      "within_10_min_population_pct": 37.5,
+      "within_15_min_population_pct": 59.9
     }
   },
   "population": {
@@ -47,5 +54,20 @@
   "beyond_limit_for_at_least_one_pct": 75.4,
   "beyond_limit_for_at_least_one_population": 533165,
   "beyond_limit_for_at_least_one_population_pct": 57.0,
-  "caveat": "OSM may lack POIs that exist; a gap here means 'not mapped within reach', not 'no facility'."
+  "caveat": "OSM may lack POIs that exist; a gap here means 'not mapped within reach', not 'no facility'.",
+  "sources": [
+    {
+      "name": "OpenStreetMap, Geofabrik extract java-latest.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/indonesia/java-latest.osm.pbf",
+      "snapshot": "2026-10-27T21:23:59Z",
+      "licence": "ODbL 1.0, (c) OpenStreetMap contributors"
+    },
+    {
+      "name": "GHSL GHS-POP R2023A, 2020 epoch, 100 m (modelled, not a census)",
+      "publisher": "European Commission, Joint Research Centre",
+      "url": "https://data.jrc.ec.europa.eu/dataset/2ff68a52-5b5b-4a22-8f40-c41da8332cfe",
+      "doi": "10.2905/2FF68A52-5B5B-4A22-8F40-C41DA8332CFE",
+      "licence": "European Commission reuse notice (CC BY 4.0)"
+    }
+  ]
 }

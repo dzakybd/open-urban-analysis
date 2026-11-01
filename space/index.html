@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>open-urban-analysis</title>
-<meta name="description" content="Six questions about Indonesian cities and regencies, answered from free OpenStreetMap data: a 15-minute city, a bridge closure, walkability, transit access, green space and puskesmas siting.">
+<meta name="description" content="Six questions about Indonesian cities and regencies, answered from free OpenStreetMap data: where to put a store, a house report card, puskesmas siting, flood and evacuation, ambulance coverage, and who is underserved by age.">
 <style>
 :root {
   --bg: #f7f7f5; --panel: #ffffff; --fg: #1d1d1b; --muted: #6b6b66; --line: #e2e2dc; --accent: #1f5fa8;
@@ -76,7 +76,7 @@ footer { margin-top: 28px; font-size: 13px; }
     <div class="answer" id="answer"></div>
   </section>
 
-  <footer class="muted">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL), read through OSMnx from a dated Geofabrik extract of Java (27 Oct 2026) with osmium; one Tebet cross-check ran against the live Overpass API. Population: GHSL GHS-POP R2023A (JRC), a modelled grid, not a census. Travel times are free-flow network estimates at 4.8 km/h walking. OSM has no sidewalk quality, shade or safety.</footer>
+  <footer class="muted">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL), read through OSMnx from dated Geofabrik extracts with osmium (Java 27 Oct 2026; Sulawesi and Nusa Tenggara 30 Oct 2026). Population: GHSL GHS-POP R2023A (JRC) and, for age groups, WorldPop R2025A (CC BY 4.0), both modelled grids, not censuses. Flood elevation: Copernicus DEM GLO-30, a surface model. Travel times are modelled from road class (walking 4.8 km/h, driving free-flow), not measured. No mobility traces, transit schedules, traffic, rent, foot traffic or sales data. OSM has no sidewalk quality, shade or safety.</footer>
 </main>
 <script>
 let cases = [], current = null, view = 0;

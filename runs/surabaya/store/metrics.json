@@ -1,0 +1,85 @@
+{
+  "place": "Central Surabaya (Tegalsari, Genteng, Gubeng)",
+  "mode": "walk",
+  "shop": "convenience",
+  "catchment_min": 10.0,
+  "competitors": {
+    "in_area": 54,
+    "in_buffer": 81,
+    "snapped_to_street": 81,
+    "indomaret": 25,
+    "alfamart": 15
+  },
+  "population_in_area": 251522,
+  "people_per_mapped_shop": 4658,
+  "top_sites_with_no_competitor": 5,
+  "candidates": 336,
+  "candidate_rule": "street nodes inside the area, one per 200 m square",
+  "score": "people within the catchment / (competitors within it + 1)",
+  "candidate_people_per_store_median": 3840,
+  "candidate_people_per_store_p90": 8432,
+  "candidates_with_no_competitor_pct": 5.1,
+  "sites": [
+    {
+      "rank": 1,
+      "osm_node": 1685220103,
+      "people": 19384,
+      "competitors": 0,
+      "people_per_store": 19384,
+      "lat": -7.28056,
+      "lng": 112.73865
+    },
+    {
+      "rank": 2,
+      "osm_node": 1685005466,
+      "people": 15072,
+      "competitors": 0,
+      "people_per_store": 15072,
+      "lat": -7.2668,
+      "lng": 112.7628
+    },
+    {
+      "rank": 3,
+      "osm_node": 4461161797,
+      "people": 14833,
+      "competitors": 0,
+      "people_per_store": 14833,
+      "lat": -7.26262,
+      "lng": 112.75981
+    },
+    {
+      "rank": 4,
+      "osm_node": 1685013675,
+      "people": 13838,
+      "competitors": 0,
+      "people_per_store": 13838,
+      "lat": -7.285,
+      "lng": 112.75138
+    },
+    {
+      "rank": 5,
+      "osm_node": 1682369706,
+      "people": 11942,
+      "competitors": 0,
+      "people_per_store": 11942,
+      "lat": -7.25378,
+      "lng": 112.73968
+    }
+  ],
+  "method": "walking at 4.8 km/h; top 5 by score, each at least 500 m from a better one",
+  "caveat": "Ranks people against mapped competitors only: no rent, foot traffic, income or sales data, so it is not a profit forecast. OSM is incomplete and no public register of minimarkets exists to check it against: an unmapped competitor makes a site look emptier than it is, and a site with no competitor in a dense district is more likely a mapping gap than free ground. Minimarkets tagged shop=supermarket are not counted.",
+  "sources": [
+    {
+      "name": "OpenStreetMap, Geofabrik java-latest.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/indonesia/java.html",
+      "version": "snapshot of 27 Oct 2026",
+      "licence": "ODbL 1.0"
+    },
+    {
+      "name": "GHSL GHS-POP R2023A, 2020 epoch, 100 m (JRC)",
+      "url": "https://ghsl.jrc.ec.europa.eu/ghs_pop2023.php",
+      "version": "R2023A",
+      "licence": "CC BY 4.0"
+    }
+  ]
+}

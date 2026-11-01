@@ -1,0 +1,57 @@
+{
+  "place": "Kabupaten Sumba Barat Daya, NTT",
+  "mode": "walk",
+  "speed_kmh": 4.8,
+  "limit_min": 30.0,
+  "direction": "to the nearest POI (reversed graph)",
+  "area_km2": 1394.05,
+  "cells": 139395,
+  "cells_on_network": 33554,
+  "off_network_pct": 75.9,
+  "categories": {
+    "school": {
+      "in_area": 78,
+      "in_buffer": 109,
+      "reachable_nodes": 79,
+      "within_5_min_pct": 3.2,
+      "within_10_min_pct": 7.7,
+      "within_30_min_pct": 34.5,
+      "beyond_limit_pct": 65.5,
+      "median_min": 43.2,
+      "p90_min": 163.7,
+      "unreachable_pct": 0.0,
+      "beyond_limit_population": 29834,
+      "beyond_limit_population_pct": 58.0,
+      "within_5_min_population_pct": 5.4,
+      "within_10_min_population_pct": 11.4,
+      "within_30_min_population_pct": 42.0
+    }
+  },
+  "population": {
+    "source": "WorldPop R2025A, 2025, 100 m, ages 5-14 (modelled, not a census)",
+    "total_on_network": 51424,
+    "total_in_area": 83533
+  },
+  "all_categories_within_limit_pct": 34.5,
+  "no_category_within_limit_pct": 65.5,
+  "beyond_limit_for_at_least_one_pct": 65.5,
+  "beyond_limit_for_at_least_one_population": 29834,
+  "beyond_limit_for_at_least_one_population_pct": 58.0,
+  "caveat": "OSM may lack POIs that exist; a gap here means 'not mapped within reach', not 'no facility'.",
+  "sources": [
+    {
+      "name": "OpenStreetMap, Geofabrik extract nusa-tenggara-latest.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/indonesia/nusa-tenggara-latest.osm.pbf",
+      "snapshot": "2026-10-30T21:24:51Z",
+      "licence": "ODbL 1.0, (c) OpenStreetMap contributors"
+    },
+    {
+      "name": "WorldPop Global2 age and sex structures, individual countries, 100 m (3 arc s), R2025A v1, 2025, constrained (modelled, not a census)",
+      "publisher": "WorldPop, University of Southampton",
+      "url": "https://hub.worldpop.org/geodata/listing?id=138",
+      "doi": "10.5258/SOTON/WP00841",
+      "licence": "CC BY 4.0",
+      "age": "5-14"
+    }
+  ]
+}

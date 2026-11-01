@@ -1,0 +1,16 @@
+{
+"type": "FeatureCollection",
+"name": "pois",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "Rumah Sakit Karitas", "category": "health" }, "geometry": { "type": "Point", "coordinates": [ 119.2304612, -9.442441 ] } },
+{ "type": "Feature", "properties": { "name": "Kompleks RSU Waikabubak", "category": "health" }, "geometry": { "type": "Point", "coordinates": [ 119.380278, -9.6216143 ] } },
+{ "type": "Feature", "properties": { "name": "Puskesmas Bondokodi", "category": "health" }, "geometry": { "type": "Point", "coordinates": [ 118.9941683, -9.5943621 ] } },
+{ "type": "Feature", "properties": { "name": "Puskesmas Gaura", "category": "health" }, "geometry": { "type": "Point", "coordinates": [ 119.2556037, -9.713544 ] } },
+{ "type": "Feature", "properties": { "name": "Rumah Sakit Karitas Homba Karipit", "category": "health" }, "geometry": { "type": "Point", "coordinates": [ 119.0303171, -9.5226211 ] } },
+{ "type": "Feature", "properties": { "name": "Puskesmas Bondo Kodi", "category": "health" }, "geometry": { "type": "Point", "coordinates": [ 118.994194, -9.5948074 ] } },
+{ "type": "Feature", "properties": { "name": "PKM Radamata", "category": "health" }, "geometry": { "type": "Point", "coordinates": [ 119.2771735, -9.403568 ] } },
+{ "type": "Feature", "properties": { "name": "PKM Walla Ndimu", "category": "health" }, "geometry": { "type": "Point", "coordinates": [ 119.0383661, -9.6260555 ] } },
+{ "type": "Feature", "properties": { "name": "RSUD Waikabubak", "category": "health" }, "geometry": { "type": "Point", "coordinates": [ 119.379763329535308, -9.62149675 ] } }
+]
+}

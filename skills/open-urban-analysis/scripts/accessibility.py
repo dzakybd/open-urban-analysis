@@ -35,7 +35,15 @@ def main():
     ap.add_argument("--buffer-m", type=float, default=1500)
     ap.add_argument("--spacing-m", type=float, default=100)
     ap.add_argument(
-        "--population", action="store_true", help="weight cells by GHSL population (downloads a ~20 MB tile once)"
+        "--population",
+        nargs="?",
+        const="ghsl",
+        choices=["ghsl", "worldpop"],
+        help="weight cells by population: GHSL (the default, a ~20 MB tile once) or WorldPop by age (with --age)",
+    )
+    ap.add_argument("--age", help="with --population worldpop: an age range such as 5-14 or 60+ (default: all ages)")
+    ap.add_argument(
+        "--from-poi", action="store_true", help="time FROM the nearest POI (an ambulance leaving a hospital), not to it"
     )
     ap.add_argument(
         "--exclude-name", help="regex: drop POIs whose OSM name matches (for example 'dental' among hospitals)"
@@ -47,8 +55,17 @@ def main():
     c.outdir(args.out)
     aoi = c.load_aoi(args.aoi)
     cats = c.parse_categories(args.categories)
+    if args.age and args.population != "worldpop":
+        ap.error("--age needs --population worldpop")
     res = c.compute_access(
-        aoi, cats, args.mode, args.buffer_m, args.speed_kmh, args.spacing_m, exclude_name=args.exclude_name
+        aoi,
+        cats,
+        args.mode,
+        args.buffer_m,
+        args.speed_kmh,
+        args.spacing_m,
+        exclude_name=args.exclude_name,
+        from_poi=args.from_poi,
     )
     G, grid = res["G"], res["grid"]
     on, lim = grid["on_network"], args.minutes
@@ -59,16 +76,23 @@ def main():
         "mode": args.mode,
         "speed_kmh": args.speed_kmh,
         "limit_min": lim,
+        "direction": "from the nearest POI (forward graph)" if args.from_poi else "to the nearest POI (reversed graph)",
         "area_km2": round(c.area_km2(G, aoi), 2),
         "cells": len(on),
         "cells_on_network": int(on.sum()),
         "off_network_pct": round(float((~on).mean() * 100), 1),
         "categories": {},
     }
-    pop = c.ghsl_population(grid["x"], grid["y"], G.graph["crs"]) if args.population else None
+    pop = None
+    if args.population == "ghsl":
+        pop = c.ghsl_population(grid["x"], grid["y"], G.graph["crs"])
+    elif args.population == "worldpop":
+        pop = c.worldpop_population(grid["x"], grid["y"], G.graph["crs"], args.age or "0+", cell_m=args.spacing_m)
     if pop is not None:
         metrics["population"] = {
-            "source": "GHSL GHS-POP R2023A, 2020, 100 m (modelled, not a census)",
+            "source": "GHSL GHS-POP R2023A, 2020, 100 m (modelled, not a census)"
+            if args.population == "ghsl"
+            else f"WorldPop R2025A, 2025, 100 m, ages {args.age or 'all'} (modelled, not a census)",
             "total_on_network": round(float(pop[on].sum())),
             "total_in_area": round(float(pop.sum())),
         }
@@ -92,6 +116,10 @@ def main():
             metrics["categories"][cat]["beyond_limit_population_pct"] = round(
                 float(w[~(m <= lim)].sum() / w.sum() * 100), 1
             )
+            for t in limits:
+                metrics["categories"][cat][f"within_{int(t)}_min_population_pct"] = round(
+                    float(w[m <= t].sum() / w.sum() * 100), 1
+                )
         reach_all &= m <= lim
         reach_none &= ~(m <= lim)
         iso = c.isochrones(G, r["surface"], limits)
@@ -106,6 +134,7 @@ def main():
         metrics["beyond_limit_for_at_least_one_population"] = round(float(w[~reach_all].sum()))
         metrics["beyond_limit_for_at_least_one_population_pct"] = round(float(w[~reach_all].sum() / w.sum() * 100), 1)
     metrics["caveat"] = "OSM may lack POIs that exist; a gap here means 'not mapped within reach', not 'no facility'."
+    metrics["sources"] = c.data_sources(args.population, args.age)
 
     # files
     out = args.out
@@ -135,6 +164,8 @@ def make_map(aoi, res, iso, pois, cells, args, path):
     import folium
 
     m = c.base_map(aoi)
+    w, s, e, n = aoi["polygon"].bounds
+    m.fit_bounds([[s, w], [n, e]])  # a regency does not fit the default zoom 14
     lim = args.minutes
     for cat in res["cats"]:
         sub = iso[(iso.category == cat) & (iso.minutes == lim)]
@@ -212,10 +243,20 @@ def make_figure(aoi, res, metrics, args, path):
             ("90th percentile", f"{mm['p90_min']:.1f} min"),
         ]
         if "beyond_limit_population" in mm:
-            rows += [
-                ("people beyond reach", f"{mm['beyond_limit_population']:,.0f}"),
-                ("of the population", f"{mm['beyond_limit_population_pct']:.0f}%"),
+            # with a population the question is how many people are reached, so the table shows people, not area
+            rows = [
+                *[
+                    (f"people within {t:g} min", f"{mm[f'within_{int(t)}_min_population_pct']:.1f}%")
+                    for t in sorted({5, 10, lim})
+                ],
+                (f"people beyond {lim:.0f} min", f"{mm['beyond_limit_population']:,.0f}"),
+                *rows[3:],
             ]
+            pop = metrics["population"]
+            if pop["total_in_area"] > pop["total_on_network"]:
+                # people more than 200 m from any mapped way are in neither count above: show them, or the table understates the gap
+                off = pop["total_in_area"] - pop["total_on_network"]
+                rows.append(("not counted: no mapped road nearby", f"{off:,.0f} · {off / pop['total_in_area']:.0%}"))
         ax.set_title("Coverage", loc="left", fontsize=13, fontweight="bold")
         for i, (k, v) in enumerate(rows):
             y = 0.86 - i * 0.105
@@ -258,6 +299,7 @@ def make_figure(aoi, res, metrics, args, path):
             if args.mode == "walk"
             else "Free-flow drive times by road class"
         )
+        + (" from the POI" if args.from_poi else "")
         + "; a gap may be an unmapped POI.",
         ha="right",
         fontsize=7.5,

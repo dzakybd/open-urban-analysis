@@ -1,9 +1,8 @@
 """Pack the precomputed case runs into space/data for the Hugging Face Space.
 
-Every number comes from the run's own metrics.json, so nothing is retyped. Six cases: the 15-minute city in
-Tebet, the closure of Jembatan Gondang I on the Tulungagung-Trenggalek road, walkability in Menteng against
-BSD City, transit access in Jagakarsa against the Dukuh Atas benchmark, park access in Tambora weighted
-by population, and puskesmas siting for Kabupaten Demak.
+Every number comes from the run's own metrics.json, so nothing is retyped. Six cases: where to put a new store in
+central Surabaya, the report card of a house in Sleman, puskesmas siting for Kabupaten Demak, flood and evacuation in
+Kota Pekalongan, ambulance coverage in Kota Makassar, and who is underserved by age in Kabupaten Sumba Barat Daya.
 
 Usage: uv run python space/build.py
 """
@@ -33,241 +32,117 @@ def case(cid, title, subtitle, stats, table, note, refs, images):
     }
 
 
-def tebet():
-    m = load("tebet/access/metrics.json")
-    raw = load("tebet/access-raw/metrics.json")
-    cat = m["categories"]
+def store():
+    m = load("surabaya/store/metrics.json")
+    comp, sites = m["competitors"], m["sites"]
     stats = [
         [
-            f"{m['all_categories_within_limit_pct']:.0f}%",
-            "of the area reaches a hospital, school, park and market within 15 min on foot",
+            f"{m['top_sites_with_no_competitor']} of {len(sites)}",
+            "top sites have no mapped competitor within a 10-minute walk",
         ],
         [
-            f"{cat['hospital']['within_15_min_pct']:.0f}%",
-            "within 15 min of a hospital (dental clinic mis-tag excluded)",
+            f"{sites[0]['people']:,}",
+            f"people within 10 min of the best site (rank 1, {sites[0]['competitors']} mapped competitors)",
         ],
-        [f"{cat['school']['within_15_min_pct']:.0f}%", "within 15 min of a school"],
         [
-            f"{m['beyond_limit_for_at_least_one_population']:,}",
-            f"residents ({m['beyond_limit_for_at_least_one_population_pct']:.0f}%) miss at least one of the four",
+            f"{comp['in_area']}",
+            f"minimarkets mapped for {m['population_in_area']:,} residents ({m['people_per_mapped_shop']:,} per shop)",
         ],
+        [f"{m['candidate_people_per_store_median']:,}", "people per store at the median candidate site"],
     ]
     table = [
         [
-            k.replace("_", " "),
-            f"{cat[k]['within_15_min_pct']:.0f}% within 15 min · median {cat[k]['median_min']:.1f} min · {cat[k]['in_area']} mapped in the area",
+            f"site {s['rank']} ({s['lat']}, {s['lng']})",
+            f"{s['people']:,} people · {s['competitors']} competitors · {s['people_per_store']:,} per store",
         ]
-        for k in ("hospital", "school", "park", "market")
+        for s in sites
     ]
     table += [
         [
-            "with the mis-tag counted",
-            f"hospital: {raw['categories']['hospital']['within_15_min_pct']:.0f}% within 15 min",
+            "mapped minimarkets",
+            f"{comp['in_area']} in the disc ({comp['in_buffer']} with the buffer): {comp['indomaret']} Indomaret, {comp['alfamart']} Alfamart or Alfamidi",
         ],
-        ["population (GHSL 2020)", f"{m['population']['total_in_area']:,} in the area"],
+        [
+            "candidates",
+            f"{m['candidates']} street nodes · {m['candidates_with_no_competitor_pct']}% have no mapped competitor",
+        ],
+        ["population (GHSL 2020)", f"{m['population_in_area']:,} in the disc"],
     ]
     return case(
-        "fifteen-minute",
-        "The 15-minute city",
-        "Tebet, South Jakarta · 1.5 km radius · 15-minute walk",
+        "store-finder",
+        "Where to put a new store?",
+        "Central Surabaya (Tegalsari, Genteng, Gubeng) · 2 km radius · 10-minute walk",
         stats,
         table,
-        "Every route is computed on the OSM street graph at 4.8 km/h; a white cell on the figure has no mapped hospital, school, park or market within 15 minutes. One dental clinic in Tebet is tagged amenity=hospital in OSM; the figure excludes it, and the table shows both readings. Markets and small clinics are what OSM maps least, so those bars are lower bounds on real access: an unmapped facility would only raise them. This case has no independent ground truth; the closest check is the same run against the live Overpass API, which agrees to a few percentage points.",
+        "Each candidate street node is scored by the people who can walk to it in 10 minutes divided by the mapped minimarkets in that catchment plus one; the top five sit at least 500 m apart. The check is the map itself: no public register of minimarkets exists to count against, and all five top sites have no mapped competitor in a district of about 20,000 residents per km², which is far more likely unmapped Indomaret and Alfamart branches than free ground. The ranking uses people and mapped competitors only: no rent, foot traffic, income or sales, so a site is a place to survey on foot, not a profit forecast.",
+        [
+            [
+                "GHSL GHS-POP R2023A (JRC): the population grid the catchments use, a model, not a census.",
+                "https://ghsl.jrc.ec.europa.eu/ghs_pop2023.php",
+            ],
+        ],
+        [["figure.png", "Top five sites and catchments"], ["map.html", "Interactive map"]],
+    )
+
+
+def report():
+    m = load("sleman/report/metrics.json")
+    cats = m["categories"]
+    com = m["commute"]
+    labels = {
+        "school": "School",
+        "puskesmas": "Puskesmas",
+        "clinic": "Clinic",
+        "hospital": "Hospital",
+        "marketplace": "Marketplace",
+        "convenience": "Convenience store",
+        "park": "Park",
+        "bus_stop": "Bus stop",
+        "rail": "Rail station",
+    }
+
+    def row(k):
+        c = cats[k]
+        if c["nearest_walk_min"] is None:
+            return [labels[k], "none mapped within reach"]
+        return [
+            labels[k],
+            f"{c['nearest_walk_min']:.1f} min walk · {c['nearest_bike_min']:.1f} bike · {c['nearest_drive_min']:.1f} car · {c['within_15_min_walk']} within 15 min · {c['nearest_name']}",
+        ]
+
+    stats = [
+        [
+            f"{cats['school']['nearest_walk_min']:.1f} min",
+            f"on foot to the nearest school ({cats['school']['nearest_name']})",
+        ],
+        [
+            f"{cats['convenience']['nearest_walk_min']:.1f} min",
+            f"on foot to the nearest convenience store ({cats['convenience']['nearest_name']})",
+        ],
+        [
+            f"{cats['puskesmas']['nearest_walk_min']:.0f} min",
+            f"on foot to the nearest puskesmas ({cats['puskesmas']['nearest_name']})",
+        ],
+        [
+            f"{com['walk_min']:.0f} / {com['bike_min']:.0f} / {com['drive_min']:.0f} min",
+            f"to {com['to']} on foot / by bike / by car (free-flow)",
+        ],
+    ]
+    table = [row(k) for k in labels] + [
+        [
+            "commute to " + com["to"],
+            f"{com['straight_km']} km straight · {com['walk_km']} km on foot · {com['drive_km']} km by car",
+        ]
+    ]
+    return case(
+        "report-card",
+        "A house report card",
+        f"{m['place']} · {m['reach_radius_m'] / 1000:g} km reach · one workplace",
+        stats,
+        table,
+        "One row per category and never a combined score: which row matters depends on the household. Walking is 4.8 km/h, cycling 15 km/h on the walking network, driving free-flow by road class. Nothing here has an independent source, so each row is what OSM records; the weakest rows are the ones most likely to be a mapping gap (few puskesmas within reach, a nearest market with no name, no rail station mapped). The commute is a modelled walk, bike or free-flow car trip, not public transport or a rush-hour drive. A bus stop is a mapped stop, not a service.",
         [],
-        [["figure.png", "Isochrones, per category and combined"], ["map.html", "Interactive map"]],
-    )
-
-
-def gondang():
-    car = load("gondang/closure-car/metrics.json")
-    bus = load("gondang/closure-bus/metrics.json")
-    pc, pb = car["pairs"], bus["pairs"]
-    stats = [
-        [f"{car['closure']['edges_removed']}", "road edges removed (150 m around the bridge, every road)"],
-        [
-            f"+{pc['extra_min_median_of_affected']:.1f} min",
-            f"median extra minutes, car ({pc['affected_over_1_min_pct']:.0f}% of trips slower)",
-        ],
-        [f"+{pc['extra_min_max']:.0f} min", "worst car detour"],
-        [
-            f"+{pb['extra_min_median_of_affected']:.1f} min",
-            f"median extra, bus on classified roads ({pb['affected_over_1_min_pct']:.0f}% slower)",
-        ],
-    ]
-    table = []
-    for label, mm in (("car", car), ("bus", bus)):
-        for r in mm["routes"]:
-            table.append(
-                [
-                    f"{r['from'].split()[0]} → {r['to'].split()[0]} ({label})",
-                    f"{r['before']['km']} km / {r['before']['minutes']:.0f} min → {r['after']['km']} km / {r['after']['minutes']:.0f} min",
-                ]
-            )
-    lm = car["routes"][0]["landmarks_min_distance_m"]
-    for name in ("Mojoarum", "Bendungan", "Kalangbret", "Campurdarat"):
-        d = lm[name]
-        table.append([f"car detour near {name}", f"{d['before']:,} m before → {d['after']:,} m after"])
-    lm = bus["routes"][0]["landmarks_min_distance_m"]
-    for name in ("Mojoarum", "Campurdarat"):
-        d = lm[name]
-        table.append([f"bus detour near {name}", f"{d['before']:,} m before → {d['after']:,} m after"])
-    return case(
-        "bridge-closure",
-        "A bridge closes",
-        "Jembatan Gondang I, Tulungagung–Trenggalek national road · closed 2 Jun 2026",
-        stats,
-        table,
-        "The simulation removes every road edge within 150 m of the bridge (OSM draws the bridge as a polygon with alley bridges beside it, so a tighter radius is bypassed). The car detour follows the lanes the police announced for light vehicles; on classified roads only — a bus — the model swings south through the same Campurdarat corridor the police announced for heavy vehicles. It does not match the announced detour's length: the model's bus detour is 1.1 km shorter than the direct run, while the announced heavy route adds about 10 km, because the named trips end inside the 8 km analysis disc and OSM's free-flow model does not see the road width that made the police choose the long loop. Minutes are free-flow; queueing at the diversion adds more. The bridge reopened on 24 Oct 2026 while the new span is finished.",
-        [
-            [
-                "detik, 2 Jun 2026: closed six months; light vehicles via Kalangbret and Mojoarum lanes, buses and trucks via Tamanan–Campurdarat–Pakel–Bandung, about 10 km longer.",
-                "https://www.detik.com/jatim/berita/d-8514918/jembatan-gondang-ditutup-total-6-bulan-ini-jalur-alternatifnya",
-            ],
-            [
-                "Antara, 2 Jun 2026: closure 2 Jun–11 Dec 2026; the three light-vehicle routes and the heavy-vehicle route.",
-                "https://www.antaranews.com/berita/5591581/jalan-nasional-tulungagung-trenggalek-ditutup-total",
-            ],
-            [
-                "Antara Jatim, 24 Oct 2026: reopened to traffic while works continue.",
-                "https://jatim.antaranews.com/berita/1110811/jembatan-gondang-tulungagung-dibuka-untuk-umum",
-            ],
-        ],
-        [
-            ["figure-car.png", "Car detours"],
-            ["map-car.html", "Interactive map, car"],
-            ["figure-bus.png", "Bus (classified roads only)"],
-            ["map-bus.html", "Interactive map, bus"],
-        ],
-    )
-
-
-def walkability():
-    m = load("walkability/compare/metrics.json")
-    a, b = m["places"]
-    stats = [
-        [
-            f"{a['intersection_density_per_km2']:.0f} vs {b['intersection_density_per_km2']:.0f} /km²",
-            "intersection density, Menteng vs BSD City",
-        ],
-        [
-            f"{a['mean_essentials_within_10_min']:.1f} vs {b['mean_essentials_within_10_min']:.1f}",
-            "of 5 essentials within a 10-minute walk",
-        ],
-        [
-            f"{a['cells_with_all_5_within_10_min_pct']:.0f}% vs {b['cells_with_all_5_within_10_min_pct']:.0f}%",
-            "of the area, all 5 within 10 min",
-        ],
-        [
-            f"{a['mapped_sidewalk_share_of_street_length_pct']:.0f}% vs {b['mapped_sidewalk_share_of_street_length_pct']:.0f}%",
-            "street length with a mapped sidewalk",
-        ],
-    ]
-    rows = [
-        ("Street density (km/km²)", "street_density_km_per_km2"),
-        ("Intersection density (/km²)", "intersection_density_per_km2"),
-        ("Dead-end share (%)", "dead_end_share_pct"),
-        ("Circuity", "circuity"),
-        ("Meshedness", "meshedness"),
-        ("Pedestrian-only ways (km/km²)", "pedestrian_ways_km_per_km2"),
-        ("Mapped crossings (/km²)", "mapped_crossings_per_km2"),
-        ("Mapped sidewalks (% of length)", "mapped_sidewalk_share_of_street_length_pct"),
-        ("Essentials within 10 min (of 5)", "mean_essentials_within_10_min"),
-        ("All 5 within 10 min (% of area)", "cells_with_all_5_within_10_min_pct"),
-        ("None within 10 min (% of area)", "cells_with_none_within_10_min_pct"),
-    ]
-    table = [[k, f"Menteng {a[key]} · BSD {b[key]}"] for k, key in rows]
-    return case(
-        "walkability",
-        "Two kinds of neighbourhood",
-        "Menteng (1920s garden city) vs BSD City (2000s new town) · equal 1.5 km discs",
-        stats,
-        table,
-        "Same radius, same metrics, no combined score on purpose. Menteng is a fine-grained grid; BSD is cul-de-sac clusters feeding arterial loops — the maps show it. The mapped-sidewalk and crossing numbers measure what mappers recorded, and Jakarta is better mapped than a new town, so read them as 'mapped', not 'present'. The essentials gap (4.35 vs 1.66 of 5) is the metric least affected by mapping effort, and it agrees with the street pattern.",
-        [],
-        [
-            ["figure.png", "Side-by-side metrics"],
-            ["map-menteng.html", "Interactive map, Menteng"],
-            ["map-bsd.html", "Interactive map, BSD City"],
-        ],
-    )
-
-
-def transit():
-    m = load("transit/access/metrics.json")
-    b = load("transit-benchmark/access/metrics.json")
-
-    def row(d, key):
-        c = d["categories"][key]
-        return f"{c['within_10_min_pct']:.0f}% within 10 min · {c['in_area']} mapped stops in the area"
-
-    table = [[f"Jagakarsa: {k.replace('_', ' ')}", row(m, k)] for k in ("rail", "transjakarta", "bus_stop")] + [
-        [f"Dukuh Atas: {k.replace('_', ' ')}", row(b, k)] for k in ("rail", "transjakarta", "bus_stop")
-    ]
-    stats = [
-        [f"{m['categories']['rail']['within_10_min_pct']:.0f}%", "of Jagakarsa within 10 min of rail — there is none"],
-        [
-            f"{m['categories']['transjakarta']['within_10_min_pct']:.0f}%",
-            "within 10 min of a TransJakarta-tagged stop (mostly Mikrotrans feeders)",
-        ],
-        [f"{b['categories']['rail']['within_10_min_pct']:.0f}%", "rail, Dukuh Atas benchmark (the city's main hub)"],
-        [f"{b['categories']['transjakarta']['within_10_min_pct']:.0f}%", "TransJakarta-tagged stops, Dukuh Atas"],
-    ]
-    return case(
-        "transit",
-        "A transit desert?",
-        "Jagakarsa, South Jakarta vs Dukuh Atas, Central Jakarta · 2 km radius · 10-minute walk",
-        stats,
-        table,
-        "Stops are what OSM tags. Mikrotrans feeder vans are tagged network=TransJakarta, so the TransJakarta category measures the minibus feeder web, not BRT corridors: feeder stops are dense in Jagakarsa while rapid transit is absent. The benchmark disc shows the same measures at the hub where four rail lines and the BRT corridors meet — and how high the bar is: even there, only a third of the disc is within 10 min of a rail stop. A stop that exists but is not mapped reads as no service here.",
-        [
-            [
-                "TransJakarta published route map (corridors cross-checked; feeder-stop counts are OSM-only).",
-                "https://transjakarta.co.id/peta-rute/",
-            ],
-        ],
-        [
-            ["figure-jagakarsa.png", "Jagakarsa isochrones"],
-            ["map-jagakarsa.html", "Interactive map, Jagakarsa"],
-            ["figure-dukuh.png", "Dukuh Atas isochrones"],
-            ["map-dukuh.html", "Interactive map, Dukuh Atas"],
-        ],
-    )
-
-
-def green():
-    m = load("green/access/metrics.json")
-    p = m["categories"]["park"]
-    stats = [
-        [f"{p['within_10_min_pct']:.0f}%", "of Tambora within a 10-minute walk of a mapped park"],
-        [
-            f"{p['beyond_limit_population']:,}",
-            f"people ({p['beyond_limit_population_pct']:.0f}%) live beyond that walk",
-        ],
-        [f"{p['median_min']:.1f} min", "median walk to the nearest park"],
-        [f"{m['population']['total_in_area']:,}", "residents in the disc (GHSL 2020, modelled)"],
-    ]
-    table = [
-        ["within 5 min", f"{p['within_5_min_pct']:.0f}%"],
-        ["within 10 min", f"{p['within_10_min_pct']:.0f}%"],
-        ["beyond 10 min", f"{p['beyond_limit_pct']:.0f}%"],
-        ["median walk", f"{p['median_min']:.1f} min"],
-        ["90th percentile", f"{p['p90_min']:.1f} min"],
-        ["parks mapped in the area", f"{p['in_area']}"],
-    ]
-    return case(
-        "green-space",
-        "Who can reach a park?",
-        "Tambora, West Jakarta · 1.5 km radius · 10-minute walk, weighted by population",
-        stats,
-        table,
-        "Tambora packs about 181,000 people (GHSL 2020) into the disc — roughly 25,600 per km² — and its mapped parks are small pocket greens toward the edge. The white core on the figure is where the people are: 54,350 residents (30%) live farther than a 10-minute walk from any mapped park. Parks are entered from points along their outline, so a gated green counts where its gate is. Small neighbourhood fields are exactly what OSM mappers most often leave out.",
-        [
-            [
-                "GHSL GHS-POP R2023A (JRC): the population grid the weighting uses — a model, not a census.",
-                "https://ghsl.jrc.ec.europa.eu/ghs_pop.php",
-            ],
-        ],
-        [["figure.png", "Park isochrones with population"], ["map.html", "Interactive map"]],
+        [["figure.png", "Minutes to the nearest facility, by mode"], ["map.html", "Interactive map"]],
     )
 
 
@@ -278,10 +153,10 @@ def demak():
     hosp, pusk = h["categories"]["hospital"], pc["categories"]["puskesmas"]
     last = s["picks"][-1]
     stats = [
-        # matched by name against the Dinkes list: OSM's 6 in the regency include one that is not on it
+        # matched by name against the BPS list: OSM's 6 in the regency include one that is not on it
         [
             "5 of 27",
-            f"official puskesmas are in OSM ({s['existing']['in_area']} OSM puskesmas, one not on the Dinkes list)",
+            f"official puskesmas are in OSM ({s['existing']['in_area']} OSM puskesmas, one not on the BPS list)",
         ],
         [f"{pusk['beyond_limit_population_pct']:.0f}%", "of residents beyond a 15-min drive of a mapped puskesmas"],
         [
@@ -307,20 +182,18 @@ def demak():
         ]
         for p in s["picks"]
     ]
-    table += [
-        ["population (GHSL 2020)", f"{h['population']['total_in_area']:,} in the regency (official 2025: 1,259,682)"]
-    ]
+    table += [["population (GHSL 2020)", f"{h['population']['total_in_area']:,} in the regency (BPS 2024: 1,252,970)"]]
     return case(
         "facility-siting",
         "Where would new puskesmas go?",
         "Kabupaten Demak, Central Java · whole regency (OSM boundary) · 15-minute drive",
         stats,
         table,
-        "The question a regency planner asks: where would the next three puskesmas reach the most people now beyond a 15-minute drive? The script picks greedily from street nodes on classified roads. The answer is mostly about the map: OSM has 5 of the 27 official puskesmas, and the first two picks land in Demak town and Mranggen, whose official puskesmas are simply unmapped. Read the picks as a mapping to-do list before a building plan. Drive times are free-flow; tidal flooding that cuts coastal roads in Sayung is not modelled, and GHSL counts about 960,000 people against an official 1.26 million.",
+        "The question a regency planner asks: where would the next three puskesmas reach the most people now beyond a 15-minute drive? The script picks greedily from street nodes on classified roads. The answer is mostly about the map: OSM has 5 of the 27 official puskesmas, and the first two picks land in Demak town and Mranggen, whose official puskesmas are simply unmapped. Read the picks as a mapping to-do list before a building plan. Drive times are free-flow; tidal flooding that cuts coastal roads in Sayung is not modelled, and GHSL counts about 960,000 people against BPS's 1.25 million for 2024.",
         [
             [
-                "Dinkes Kabupaten Demak, Bahan LPPD 2025: 27 puskesmas (15 inpatient, 12 outpatient), 52 pustu, 6 hospitals, 1,259,682 residents (Dukcapil, 2025 semester I).",
-                "https://dinkes.demakkab.go.id/wp-content/uploads/2026/05/BAHAN-LPPD-DINKES-2025.Publish.pdf",
+                "BPS Kabupaten Demak, Kabupaten Demak Dalam Angka 2025 (28 Feb 2025), Table 4.2.3 and Table 3.1.1: 27 puskesmas (15 inpatient, 12 without), 6 hospitals, 1,252,970 residents in 2024.",
+                "https://demakkab.bps.go.id/en/publication/2025/02/28/aa73744a55d7df8df2e6a2f2/kabupaten-demak-dalam-angka-2025.html",
             ],
         ],
         [
@@ -332,32 +205,195 @@ def demak():
     )
 
 
-CASES = [tebet(), gondang(), walkability(), transit(), green(), demak()]
+def flood():
+    m = load("pekalongan/flood/metrics.json")
+    lv = m["levels"][-1]
+    sh = m["shelters_in_osm"]
+    key = lv["level_m"]
+    stats = [
+        [
+            f"{lv['people_flooded']:,}",
+            f"people on flooded ground at {key} m ({lv['people_flooded_pct']}% of {m['population_in_area']:,})",
+        ],
+        [
+            f"{lv['people_dry_but_cut_off']:,}",
+            f"more dry but cut off from every shelter ({lv['people_dry_but_cut_off_pct']}%)",
+        ],
+        [f"{lv['road_under_water_pct']}%", "of walking road under water"],
+        [f"{m['no_water']['median_min']} min", "median walk to a shelter with no water, the baseline"],
+    ]
+    table = [
+        [
+            f"water at {v['level_m']} m",
+            f"{v['people_flooded']:,} flooded · {v['people_dry_but_cut_off']:,} cut off · {v['road_under_water_pct']}% road under water",
+        ]
+        for v in m["levels"]
+    ]
+    table += [
+        [
+            f"{v['village']} at {key} m",
+            f"{v[f'flooded_{key}']:,} flooded · {v[f'cut_off_{key}']:,} cut off of {v['people']:,}",
+        ]
+        for v in m["villages"][:3]
+    ]
+    table += [
+        [
+            "shelters in OSM",
+            f"{sh['school']['in_area']} schools · {sh['mosque']['in_area']} mosques · {sh['hospital']['in_area']} hospitals",
+        ]
+    ]
+    return case(
+        "flood",
+        "Who is cut off when the water rises?",
+        "Kota Pekalongan, Central Java · whole city (OSM boundary) · water at 0.5, 1.0 and 1.5 m",
+        stats,
+        table,
+        "A bathtub model: water at each level floods every 100 m cell and walking edge with a point below it, then each dry cell is timed to the nearest dry shelter over dry edges; people who are dry but have no dry road to a dry shelter are cut off. The elevation is Copernicus GLO-30, a 30 m surface model (roofs and trees raise it, so built-up ground reads high and the flood is understated), with heights above the EGM2008 geoid, not local sea level; the DEM dates from 2011-2015 and this coast is sinking. No tide timing, drainage, sea walls, pumps or rainfall. This is a floor, not a forecast. The only record to compare with is press: tidal flooding in the north of the city is a repeating event, and the exposed villages here include the northern ones the press named, but that is a pattern match, not a measured depth.",
+        [
+            [
+                "NU Online, 24 May 2018: after the rob of 23 May 2018 nearly all kelurahan in Pekalongan Utara were flooded; Krapyak residents reported about half the area under water.",
+                "https://nu.or.id/daerah/banjir-rob-di-pekalongan-utara-warga-nu-kesulitan-jalankan-ibadah-2t7kn",
+            ],
+            [
+                "Copernicus DEM GLO-30 (ESA), public AWS bucket: the surface model the heights come from.",
+                "https://registry.opendata.aws/copernicus-dem/",
+            ],
+        ],
+        [["figure.png", "People flooded and cut off, by level"], ["map.html", "Interactive map"]],
+    )
+
+
+def ambulance():
+    m = load("makassar/ambulance/metrics.json")
+    h = m["categories"]["hospital"]
+    pop = m["population"]
+    stats = [
+        [
+            f"{h['within_5_min_population_pct']:.0f}% / {h['within_10_min_population_pct']:.0f}% / {h['within_15_min_population_pct']:.0f}%",
+            "of people within 5 / 10 / 15 min of a hospital by ambulance (free-flow)",
+        ],
+        [
+            f"{h['within_5_min_pct']:.0f}% / {h['within_10_min_pct']:.0f}% / {h['within_15_min_pct']:.0f}%",
+            "of the area within 5 / 10 / 15 min",
+        ],
+        [f"{h['beyond_limit_population']:,}", f"people ({h['beyond_limit_population_pct']}%) beyond 15 min"],
+        [f"{h['in_area']}", f"hospital features mapped in the city ({h['in_buffer']} with the 5 km buffer)"],
+    ]
+    table = [
+        ["median / 90th percentile", f"{h['median_min']} / {h['p90_min']} min"],
+        ["population on the road network", f"{pop['total_on_network']:,} of {pop['total_in_area']:,} (GHSL 2020)"],
+        ["cells off the road network", f"{m['off_network_pct']}% of the area (more than 200 m from a drivable road)"],
+    ]
+    return case(
+        "ambulance",
+        "How far is the nearest ambulance?",
+        "Kota Makassar, South Sulawesi · mainland (OSM boundary) · drive time from the nearest hospital",
+        stats,
+        table,
+        "Travel time runs out of the hospital on the forward graph, so an ambulance leaving it respects one-way streets in that direction. Free-flow speeds by road class: in traffic an ambulance reaches fewer people in 10 minutes, and sirens and lane clearing go the other way. The area share is below the people share because the population sits around the hospitals in the dense centre. In Makassar amenity=hospital also tags pharmacies, puskesmas, posyandu, clinics, a dispatch post, and maternity, eye, dental and psychiatric hospitals; the run drops them by name and the kept list still has duplicates. No public official hospital count could be read, so there is no completeness figure: OSM may lack hospitals, and a missing one only makes the result worse. The 13 Spermonde islands are left out (boats, not roads).",
+        [
+            [
+                "GHSL GHS-POP R2023A (JRC): the population grid, a model of 2020, not a census.",
+                "https://ghsl.jrc.ec.europa.eu/ghs_pop2023.php",
+            ],
+        ],
+        [["figure.png", "Minutes from the nearest hospital"], ["map.html", "Interactive map"]],
+    )
+
+
+def shares(m, cat):
+    """Shares of ALL people in the age group (not only those on the network), from one accessibility metrics.json."""
+    c, pop = m["categories"][cat], m["population"]
+    total, on = pop["total_in_area"], pop["total_on_network"]
+    lim = int(m["limit_min"])
+    return {
+        "total": total,
+        "facilities": f"{c['in_area']} ({c['in_buffer']})",
+        "reached_pct": c[f"within_{lim}_min_population_pct"] * on / total,
+        "beyond": c["beyond_limit_population"],
+        "beyond_pct": c["beyond_limit_population"] / total * 100,
+        "off": total - on,
+        "off_pct": (total - on) / total * 100,
+    }
+
+
+def age():
+    school = load("sumba-barat-daya/school-walk/metrics.json")
+    named = load("sumba-barat-daya/school-walk-named/metrics.json")
+    drive = load("sumba-barat-daya/health-drive/metrics.json")
+    walk = load("sumba-barat-daya/health-walk/metrics.json")
+    runs = [
+        ("children 5-14, school, 30 min walk", shares(school, "school")),
+        ("children 5-14, named schools only", shares(named, "school")),
+        ("60+, puskesmas or hospital, 30 min drive", shares(drive, "health")),
+        ("60+, any health post, 30 min walk", shares(walk, "health")),
+    ]
+    sc, dr, wk = runs[0][1], runs[2][1], runs[3][1]
+    stats = [
+        [f"{sc['beyond_pct']:.0f}%", f"of children 5-14 ({sc['beyond']:,}) beyond a 30-min walk of a mapped school"],
+        [
+            f"{dr['beyond_pct']:.1f}%",
+            f"of people 60+ ({dr['beyond']:,}) beyond a 30-min drive of a puskesmas or hospital",
+        ],
+        [f"{wk['beyond_pct']:.0f}%", f"of people 60+ ({wk['beyond']:,}) beyond a 30-min walk of any health post"],
+        [
+            f"{sc['off_pct']:.0f}%",
+            "of children live more than 200 m from any mapped way: counted neither reached nor beyond",
+        ],
+    ]
+    table = [
+        [
+            label,
+            f"{r['facilities']} in OSM (with buffer) · {r['reached_pct']:.1f}% reached · {r['beyond']:,} ({r['beyond_pct']:.1f}%) beyond · {r['off']:,} ({r['off_pct']:.1f}%) off the mapped network",
+        ]
+        for label, r in runs
+    ]
+    table += [
+        ["population (WorldPop 2025)", f"{sc['total']:,} children 5-14 · {dr['total']:,} people 60+ in the regency"]
+    ]
+    return case(
+        "underserved-by-age",
+        "Who is underserved, by age?",
+        "Kabupaten Sumba Barat Daya, East Nusa Tenggara · whole regency (OSM boundary) · WorldPop 2025 age groups",
+        stats,
+        table,
+        "Read this first: OSM here has a fraction of the facilities and the roads are patchy too, so unmapped schools and health posts look like gaps. The figures are a floor on what is mapped, not a count of who lacks a school. Shares are of all people in the age group; people more than 200 m from any mapped way are counted neither as served nor as beyond reach. The named-schools run is the sensitivity check (unnamed amenity=school features may be buildings): the true figure sits between the two. Kemendikdasmen's Dapodik-derived table lists 288 SD and 144 SMP in the regency; OSM has about a quarter of that, so many children close to a school look far from one. No public puskesmas count was found to check the health runs against. WorldPop is a 100 m model, not a census.",
+        [
+            [
+                "Kemendikdasmen reference data (public Dapodik-derived table, read 1 Nov 2026): 288 SD and 144 SMP in Kabupaten Sumba Barat Daya.",
+                "https://referensi.data.kemendikdasmen.go.id/pendidikan/dikdas/241900/2/all/all/all",
+            ],
+            [
+                "WorldPop Global2 age and sex structures, R2025A v1, 2025, 100 m, constrained, CC BY 4.0 (doi 10.5258/SOTON/WP00841).",
+                "https://hub.worldpop.org/geodata/listing?id=138",
+            ],
+        ],
+        [
+            ["figure-school.png", "Children 5-14 to a school, 30 min walk"],
+            ["map-school.html", "Interactive map, schools"],
+            ["figure-health-drive.png", "People 60+ to a puskesmas or hospital, 30 min drive"],
+            ["figure-health-walk.png", "People 60+ to any health post, 30 min walk"],
+        ],
+    )
+
+
+CASES = [store(), report(), demak(), flood(), ambulance(), age()]
 IMAGES = {
-    "fifteen-minute": [["tebet/access/figure.png", "figure.png"], ["tebet/access/map.html", "map.html"]],
-    "bridge-closure": [
-        ["gondang/closure-car/figure.png", "figure-car.png"],
-        ["gondang/closure-car/map.html", "map-car.html"],
-        ["gondang/closure-bus/figure.png", "figure-bus.png"],
-        ["gondang/closure-bus/map.html", "map-bus.html"],
-    ],
-    "walkability": [
-        ["walkability/compare/figure.png", "figure.png"],
-        ["walkability/compare/menteng-jakarta-map.html", "map-menteng.html"],
-        ["walkability/compare/bsd-city-tangerang-selatan-map.html", "map-bsd.html"],
-    ],
-    "transit": [
-        ["transit/access/figure.png", "figure-jagakarsa.png"],
-        ["transit/access/map.html", "map-jagakarsa.html"],
-        ["transit-benchmark/access/figure.png", "figure-dukuh.png"],
-        ["transit-benchmark/access/map.html", "map-dukuh.html"],
-    ],
-    "green-space": [["green/access/figure.png", "figure.png"], ["green/access/map.html", "map.html"]],
+    "store-finder": [["surabaya/store/figure.png", "figure.png"], ["surabaya/store/map.html", "map.html"]],
+    "report-card": [["sleman/report/figure.png", "figure.png"], ["sleman/report/map.html", "map.html"]],
     "facility-siting": [
         ["demak/siting/figure.png", "figure-siting.png"],
         ["demak/siting/map.html", "map-siting.html"],
         ["demak/access-hospital/figure.png", "figure-hospital.png"],
         ["demak/access-primary/figure.png", "figure-primary.png"],
+    ],
+    "flood": [["pekalongan/flood/figure.png", "figure.png"], ["pekalongan/flood/map.html", "map.html"]],
+    "ambulance": [["makassar/ambulance/figure.png", "figure.png"], ["makassar/ambulance/map.html", "map.html"]],
+    "underserved-by-age": [
+        ["sumba-barat-daya/school-walk/figure.png", "figure-school.png"],
+        ["sumba-barat-daya/school-walk/map.html", "map-school.html"],
+        ["sumba-barat-daya/health-drive/figure.png", "figure-health-drive.png"],
+        ["sumba-barat-daya/health-walk/figure.png", "figure-health-walk.png"],
     ],
 }
 

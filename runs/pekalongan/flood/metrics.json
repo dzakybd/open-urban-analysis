@@ -1,0 +1,258 @@
+{
+  "place": "Kota Pekalongan, Jawa Tengah",
+  "dem": "Copernicus GLO-30 DSM (surface model), 30 m, heights above EGM2008",
+  "levels_m_above_egm2008": [
+    0.5,
+    1.0,
+    1.5
+  ],
+  "shelter_categories": [
+    "school",
+    "mosque",
+    "hospital"
+  ],
+  "shelters_in_osm": {
+    "school": {
+      "in_area": 39,
+      "in_buffer": 42
+    },
+    "mosque": {
+      "in_area": 7,
+      "in_buffer": 8
+    },
+    "hospital": {
+      "in_area": 5,
+      "in_buffer": 5
+    }
+  },
+  "dem_nodata_points": 0,
+  "population_in_area": 229246,
+  "population_on_network": 229201,
+  "cell_elevation_m": {
+    "p10": 0.81,
+    "p25": 1.89,
+    "p50": 4.1
+  },
+  "no_water": {
+    "people_with_route_to_shelter": 229201,
+    "median_min": 9.8,
+    "p90_min": 18.4
+  },
+  "levels": [
+    {
+      "level_m": 0.5,
+      "road_km_under_water": 11.3,
+      "road_under_water_pct": 0.7,
+      "dry_shelter_nodes": 164,
+      "dry_shelter_nodes_no_water": 164,
+      "people_flooded": 317,
+      "people_flooded_pct": 0.1,
+      "people_dry_but_cut_off": 162,
+      "people_dry_but_cut_off_pct": 0.1,
+      "cut_off_cells": 11,
+      "cut_off_p90_m_to_road_under_water": 177,
+      "cut_off_max_m_to_road_under_water": 187,
+      "people_with_dry_route": 228722,
+      "median_min_dry_route": 9.7,
+      "p90_min_dry_route": 18.4
+    },
+    {
+      "level_m": 1.0,
+      "road_km_under_water": 80.8,
+      "road_under_water_pct": 4.7,
+      "dry_shelter_nodes": 162,
+      "dry_shelter_nodes_no_water": 164,
+      "people_flooded": 1693,
+      "people_flooded_pct": 0.7,
+      "people_dry_but_cut_off": 1500,
+      "people_dry_but_cut_off_pct": 0.7,
+      "cut_off_cells": 132,
+      "cut_off_p90_m_to_road_under_water": 125,
+      "cut_off_max_m_to_road_under_water": 187,
+      "people_with_dry_route": 226018,
+      "median_min_dry_route": 9.4,
+      "p90_min_dry_route": 17.9
+    },
+    {
+      "level_m": 1.5,
+      "road_km_under_water": 159.3,
+      "road_under_water_pct": 9.2,
+      "dry_shelter_nodes": 156,
+      "dry_shelter_nodes_no_water": 164,
+      "people_flooded": 5062,
+      "people_flooded_pct": 2.2,
+      "people_dry_but_cut_off": 5486,
+      "people_dry_but_cut_off_pct": 2.4,
+      "cut_off_cells": 234,
+      "cut_off_p90_m_to_road_under_water": 140,
+      "cut_off_max_m_to_road_under_water": 196,
+      "people_with_dry_route": 218668,
+      "median_min_dry_route": 9.1,
+      "p90_min_dry_route": 16.8
+    }
+  ],
+  "villages": [
+    {
+      "village": "Panjang Wetan",
+      "people": 6255,
+      "flooded_0.5": 233,
+      "cut_off_0.5": 21,
+      "flooded_1.0": 484,
+      "cut_off_1.0": 452,
+      "flooded_1.5": 1103,
+      "cut_off_1.5": 1980
+    },
+    {
+      "village": "Panjang Baru",
+      "people": 5838,
+      "flooded_0.5": 0,
+      "cut_off_0.5": 78,
+      "flooded_1.0": 318,
+      "cut_off_1.0": 442,
+      "flooded_1.5": 1024,
+      "cut_off_1.5": 1547
+    },
+    {
+      "village": "Krapyak",
+      "people": 9821,
+      "flooded_0.5": 25,
+      "cut_off_0.5": 0,
+      "flooded_1.0": 395,
+      "cut_off_1.0": 178,
+      "flooded_1.5": 905,
+      "cut_off_1.5": 348
+    },
+    {
+      "village": "Kandang Panjang",
+      "people": 5240,
+      "flooded_0.5": 0,
+      "cut_off_0.5": 0,
+      "flooded_1.0": 130,
+      "cut_off_1.0": 89,
+      "flooded_1.5": 503,
+      "cut_off_1.5": 298
+    },
+    {
+      "village": "Poncol",
+      "people": 9481,
+      "flooded_0.5": 0,
+      "cut_off_0.5": 0,
+      "flooded_1.0": 9,
+      "cut_off_1.0": 174,
+      "flooded_1.5": 299,
+      "cut_off_1.5": 304
+    },
+    {
+      "village": "Degayu",
+      "people": 4651,
+      "flooded_0.5": 0,
+      "cut_off_0.5": 0,
+      "flooded_1.0": 114,
+      "cut_off_1.0": 79,
+      "flooded_1.5": 367,
+      "cut_off_1.5": 189
+    },
+    {
+      "village": "Bandengan",
+      "people": 2698,
+      "flooded_0.5": 0,
+      "cut_off_0.5": 63,
+      "flooded_1.0": 141,
+      "cut_off_1.0": 10,
+      "flooded_1.5": 192,
+      "cut_off_1.5": 312
+    },
+    {
+      "village": "Pabean",
+      "people": 5319,
+      "flooded_0.5": 6,
+      "cut_off_0.5": 0,
+      "flooded_1.0": 13,
+      "cut_off_1.0": 14,
+      "flooded_1.5": 100,
+      "cut_off_1.5": 204
+    },
+    {
+      "village": "Klego",
+      "people": 7293,
+      "flooded_0.5": 0,
+      "cut_off_0.5": 0,
+      "flooded_1.0": 5,
+      "cut_off_1.0": 49,
+      "flooded_1.5": 234,
+      "cut_off_1.5": 63
+    },
+    {
+      "village": "Tegaldowo",
+      "people": 793,
+      "flooded_0.5": 54,
+      "cut_off_0.5": 0,
+      "flooded_1.0": 54,
+      "cut_off_1.0": 0,
+      "flooded_1.5": 87,
+      "cut_off_1.5": 163
+    },
+    {
+      "village": "Tirto",
+      "people": 12739,
+      "flooded_0.5": 0,
+      "cut_off_0.5": 0,
+      "flooded_1.0": 0,
+      "cut_off_1.0": 0,
+      "flooded_1.5": 154,
+      "cut_off_1.5": 0
+    },
+    {
+      "village": "Pasirkratonkramat",
+      "people": 6236,
+      "flooded_0.5": 0,
+      "cut_off_0.5": 0,
+      "flooded_1.0": 14,
+      "cut_off_1.0": 13,
+      "flooded_1.5": 48,
+      "cut_off_1.5": 74
+    },
+    {
+      "village": "Setono",
+      "people": 9039,
+      "flooded_0.5": 0,
+      "cut_off_0.5": 0,
+      "flooded_1.0": 16,
+      "cut_off_1.0": 0,
+      "flooded_1.5": 31,
+      "cut_off_1.5": 5
+    },
+    {
+      "village": "Jeruksari",
+      "people": 207,
+      "flooded_0.5": 0,
+      "cut_off_0.5": 0,
+      "flooded_1.0": 1,
+      "cut_off_1.0": 0,
+      "flooded_1.5": 16,
+      "cut_off_1.5": 0
+    }
+  ],
+  "village_rule": "each cell takes the name of the nearest OSM place=village/suburb/quarter point",
+  "caveat": "Bathtub model on a 30 m DEM: no tide timing, drainage, sea walls, pumps, embankments or rainfall. Copernicus GLO-30 is a surface model (roofs, trees), so built-up ground reads high and the flood is understated. Heights are above the EGM2008 geoid, which is not local mean sea level, and the DEM dates from 2011-2015: where land is sinking (the Java north coast) today's ground is lower than it reads. Roads are dropped when any point along them is below the level, so a road crossing an unmapped culvert or ford counts as under water. Shelters are the ones OSM has.",
+  "sources": [
+    {
+      "name": "OpenStreetMap, Geofabrik java-latest.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/indonesia/java.html",
+      "version": "snapshot of 27 Oct 2026",
+      "licence": "ODbL 1.0"
+    },
+    {
+      "name": "GHSL GHS-POP R2023A, 2020 epoch, 100 m (JRC)",
+      "url": "https://ghsl.jrc.ec.europa.eu/ghs_pop2023.php",
+      "version": "R2023A",
+      "licence": "CC BY 4.0"
+    },
+    {
+      "name": "Copernicus DEM GLO-30 (ESA), public AWS bucket copernicus-dem-30m",
+      "url": "https://registry.opendata.aws/copernicus-dem/",
+      "version": "GLO-30 public release on AWS, read 1 Nov 2026 (source acquisition 2011-2015)",
+      "licence": "Copernicus DEM licence (free use with attribution): (c) DLR e.V. 2010-2014 and (c) Airbus Defence and Space GmbH 2014-2018, provided under COPERNICUS by the European Union and ESA; all rights reserved"
+    }
+  ]
+}

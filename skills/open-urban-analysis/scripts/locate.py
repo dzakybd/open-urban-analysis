@@ -18,6 +18,7 @@ once and reuse aoi.json. Compare places on discs of the same radius so the areas
 """
 
 import argparse
+import itertools
 import json
 import math
 import sys
@@ -41,6 +42,9 @@ def main():
     ap.add_argument("--lng", type=float)
     ap.add_argument("--bbox", help="west,south,east,north in degrees, instead of a query")
     ap.add_argument("--boundary", help="GeoJSON file whose first feature is the area's polygon, instead of a disc")
+    ap.add_argument(
+        "--mainland", action="store_true", help="with --boundary: keep only the largest polygon (drop islands)"
+    )
     ap.add_argument("--radius-m", type=float, default=1500, help="radius of the disc around the point")
     ap.add_argument("--name", help="label for the place")
     ap.add_argument("--out", required=True)
@@ -48,6 +52,12 @@ def main():
 
     if args.boundary:
         geom = json.loads(Path(args.boundary).read_text())["features"][0]["geometry"]
+        if args.mainland and geom["type"] == "MultiPolygon":
+            # largest outer ring by shoelace area in degrees (fine for comparing parts of one place)
+            def ring_area(r):
+                return abs(sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in itertools.pairwise(r)))
+
+            geom = {"type": "Polygon", "coordinates": max(geom["coordinates"], key=lambda p: ring_area(p[0]))}
         flat = json.dumps(geom["coordinates"]).replace("[", "").replace("]", "").split(",")
         xs, ys = [float(v) for v in flat[0::2]], [float(v) for v in flat[1::2]]
         w, s, e, n = min(xs), min(ys), max(xs), max(ys)

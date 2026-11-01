@@ -1,0 +1,105 @@
+{
+  "place": "Perumnas Minomartani, Ngaglik, Sleman",
+  "home": {
+    "lat": -7.7474,
+    "lng": 110.4044
+  },
+  "reach_radius_m": 4000.0,
+  "speeds": "walk 4.8 km/h; bike 15 km/h on the walking network; drive free-flow by OSM road class",
+  "walk_limit_min": 15,
+  "categories": {
+    "school": {
+      "in_osm_within_reach": 181,
+      "nearest_walk_min": 2.3,
+      "nearest_name": "SDN Minomartani 2",
+      "nearest_bike_min": 0.7,
+      "nearest_drive_min": 1.5,
+      "within_15_min_walk": 8
+    },
+    "puskesmas": {
+      "in_osm_within_reach": 6,
+      "nearest_walk_min": 19.1,
+      "nearest_name": "Puskesmas Depok II",
+      "nearest_bike_min": 6.1,
+      "nearest_drive_min": 5.4,
+      "within_15_min_walk": 0
+    },
+    "clinic": {
+      "in_osm_within_reach": 41,
+      "nearest_walk_min": 7.3,
+      "nearest_name": "Praktik Mandiri Bidan Dini Melani M.",
+      "nearest_bike_min": 2.3,
+      "nearest_drive_min": 2.5,
+      "within_15_min_walk": 1
+    },
+    "hospital": {
+      "in_osm_within_reach": 24,
+      "nearest_walk_min": 12.2,
+      "nearest_name": "Rumah Sakit Condong Catur",
+      "nearest_bike_min": 3.9,
+      "nearest_drive_min": 3.6,
+      "within_15_min_walk": 1
+    },
+    "marketplace": {
+      "in_osm_within_reach": 28,
+      "nearest_walk_min": 20.0,
+      "nearest_name": "(unnamed in OSM)",
+      "nearest_bike_min": 6.4,
+      "nearest_drive_min": 5.9,
+      "within_15_min_walk": 0
+    },
+    "convenience": {
+      "in_osm_within_reach": 175,
+      "nearest_walk_min": 4.0,
+      "nearest_name": "Indomaret Gurameh Raya",
+      "nearest_bike_min": 1.3,
+      "nearest_drive_min": 2.2,
+      "within_15_min_walk": 9
+    },
+    "park": {
+      "in_osm_within_reach": 378,
+      "nearest_walk_min": 1.5,
+      "nearest_name": "Taman Mutma inah",
+      "nearest_bike_min": 0.5,
+      "nearest_drive_min": 1.8,
+      "within_15_min_walk": 23
+    },
+    "bus_stop": {
+      "in_osm_within_reach": 174,
+      "nearest_walk_min": 21.8,
+      "nearest_name": "Terminal Condong Catur",
+      "nearest_bike_min": 7.0,
+      "nearest_drive_min": 4.4,
+      "within_15_min_walk": 0
+    },
+    "rail": {
+      "in_osm_within_reach": 0,
+      "nearest_walk_min": null,
+      "nearest_name": null,
+      "nearest_bike_min": null,
+      "nearest_drive_min": null,
+      "within_15_min_walk": 0
+    }
+  },
+  "commute": {
+    "to": "UGM campus",
+    "lat": -7.7705,
+    "lng": 110.3778,
+    "straight_km": 3.89,
+    "walk_min": 62.2,
+    "walk_km": 4.9,
+    "bike_min": 20.3,
+    "drive_min": 13.8,
+    "drive_km": 5.06
+  },
+  "hospital_exclude_name": "puskesmas|klinik|gigi|bersalin|pijat|bekam",
+  "caveat": "Facilities are the ones OSM has: an unmapped school or clinic looks missing. Bus and rail rows are mapped stops, not service; the commute is modelled walk, bike or free-flow car, not public transport or traffic.",
+  "sources": [
+    {
+      "name": "OpenStreetMap, Geofabrik java-latest.osm.pbf",
+      "url": "https://download.geofabrik.de/asia/indonesia/java.html",
+      "version": "snapshot of 27 Oct 2026",
+      "licence": "ODbL 1.0"
+    }
+  ]
+}

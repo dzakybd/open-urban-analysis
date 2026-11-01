@@ -113,6 +113,7 @@ def main():
         "threshold_min": thr,
         "existing": {**c.poi_counts(aoi, pois), "names": sorted({n for n in pois["name"] if isinstance(n, str)})},
         "weight": "GHSL GHS-POP R2023A, 2020, 100 m (modelled, not a census)" if args.population else "100 m cells",
+        "sources": c.data_sources("ghsl" if args.population else None),
         f"total_{unit}": round(total),
         f"beyond_limit_{unit}": round(beyond),
         "beyond_limit_pct": round(beyond / total * 100, 1),
